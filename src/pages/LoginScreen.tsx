@@ -1,25 +1,47 @@
-import React from "react";
-import { Form, Input, Button, ConfigProvider, Divider } from "antd";
+import React, { useState } from "react";
+import { Form, Input, Button, ConfigProvider, message } from "antd";
 import {
-  LockOutlined,
-  UserOutlined,
   EyeInvisibleOutlined,
   EyeTwoTone,
 } from "@ant-design/icons";
 import { CiLock } from "react-icons/ci";
 import { MdPersonOutline } from "react-icons/md";
 import logo from "../assets/logo.png";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { login } from "../features/auth/services/authService";
+
+type LoginFormValues = {
+  account: string;
+  password: string;
+};
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const onFinish = (values: any) => {
-    console.log("Login values:", values);
+  const [loading, setLoading] = useState(false);
+
+  const onFinish = async (values: LoginFormValues) => {
+    try {
+      setLoading(true);
+
+      await login({
+        username: values.account,
+        password: values.password,
+      });
+
+      message.success("Đăng nhập thành công");
+      navigate("/transactions/create");
+    } catch (error) {
+      message.error(
+        error instanceof Error ? error.message : "Đăng nhập thất bại"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
-    console.log("Login with Google");
-  };
+  // const handleGoogleLogin = () => {
+  //   message.info("Chức năng Google Login sẽ làm sau");
+  // };
 
   return (
     <ConfigProvider
@@ -64,17 +86,22 @@ const LoginPage: React.FC = () => {
         </div>
 
         <div className="relative z-10 flex min-h-screen items-center justify-center px-5 py-8">
-          <div className="w-full max-w-[560px]">
+          {/* Thêm -mt-16 để đẩy toàn bộ nội dung lên trên */}
+          <div className="w-full max-w-[560px] -mt-16">
             {/* Logo */}
-            <div className="mb-5 flex items-center justify-center gap-5">
+            {/* Đổi mb-5 thành mb-6 để giãn cách thêm một chút */}
+            <div className="mb-6 flex items-center justify-center gap-5">
               <img
                 onClick={() => navigate("/landing")}
-                className="h-[90px]"
+                className="h-[90px] cursor-pointer transition-transform hover:scale-105"
                 src={logo}
+                alt="Money Note"
               />
             </div>
+
             {/* Heading */}
-            <div className="mb-10 text-center">
+            {/* Đổi mb-10 thành mb-16 để tăng khoảng cách giữa chữ và khung đăng nhập */}
+            <div className="mb-16 text-center">
               <p className="mb-4 text-[20px] font-black leading-tight tracking-[-1px] text-[#070B35] max-sm:text-[30px]">
                 Đăng nhập tài khoản
               </p>
@@ -94,7 +121,7 @@ const LoginPage: React.FC = () => {
                   rules={[
                     {
                       required: true,
-                      message: "Vui lòng nhập email hoặc số điện thoại",
+                      message: "Vui lòng nhập tên đăng nhập",
                     },
                   ]}
                 >
@@ -102,8 +129,9 @@ const LoginPage: React.FC = () => {
                     prefix={
                       <MdPersonOutline className="mr-3 text-[24px] text-[#545BFF]" />
                     }
-                    placeholder="Email hoặc số điện thoại"
+                    placeholder="Tên đăng nhập"
                     className="money-input"
+                    autoComplete="username"
                   />
                 </Form.Item>
 
@@ -122,6 +150,7 @@ const LoginPage: React.FC = () => {
                     }
                     placeholder="Mật khẩu"
                     className="money-input"
+                    autoComplete="current-password"
                     iconRender={(visible) =>
                       visible ? (
                         <EyeTwoTone twoToneColor="#8E92AD" />
@@ -133,12 +162,17 @@ const LoginPage: React.FC = () => {
                 </Form.Item>
 
                 <div className="-mt-2 mb-7 flex justify-end">
-                  <a
-                    href="#forgot"
-                    className="text-[17px] font-bold text-[#3145FF] transition hover:text-[#1D28D9]"
+                  <button
+                    type="button"
+                    onClick={() =>
+                      message.info(
+                        "Vì tài khoản lưu local nên quên mật khẩu sẽ xử lý sau bằng reset dữ liệu hoặc backup."
+                      )
+                    }
+                    className="border-none bg-transparent p-0 text-[17px] font-bold text-[#3145FF] transition hover:text-[#1D28D9] cursor-pointer"
                   >
                     Quên mật khẩu?
-                  </a>
+                  </button>
                 </div>
 
                 <Form.Item className="mb-7">
@@ -146,6 +180,7 @@ const LoginPage: React.FC = () => {
                     type="primary"
                     htmlType="submit"
                     block
+                    loading={loading}
                     className="login-main-button"
                   >
                     Đăng nhập
@@ -153,7 +188,7 @@ const LoginPage: React.FC = () => {
                 </Form.Item>
               </Form>
 
-              <Divider className="money-divider">
+              {/* <Divider className="money-divider">
                 <span className="px-5 text-[17px] font-medium text-[#8A8EA9]">
                   Hoặc
                 </span>
@@ -171,24 +206,18 @@ const LoginPage: React.FC = () => {
                 <span className="text-base text-gray-700">
                   Tiếp tục với Google
                 </span>
-              </Button>
+              </Button> */}
 
               <div className="mt-8 text-center text-base font-medium text-[#737895]">
                 Chưa có tài khoản?{" "}
-                <a
-                  href="#register"
+                <Link
+                  to="/register"
                   className="font-black text-[#3145FF] transition hover:text-[#1D28D9]"
                 >
                   Đăng ký ngay
-                </a>
+                </Link>
               </div>
             </div>
-
-            {/* Footer */}
-            {/* <div className="mt-10 text-center text-[16px] font-medium text-[#7F839F]">
-              Phát triển bởi chuyên viên phần mềm{" "}
-              <span className="font-black text-[#3145FF]">MobiFone IT</span>
-            </div> */}
           </div>
         </div>
 
