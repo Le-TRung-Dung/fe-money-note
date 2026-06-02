@@ -19,6 +19,7 @@ import dayjs from "dayjs";
 import { STORAGE_KEYS } from "../shared/constants/storageKeys";
 import { formatMoney } from "../shared/utils/formatMoney";
 import { getDashboardSummary } from "../features/dashboard/services/dashboardService";
+import logo from '../assets/logo.png'
 
 const { Title, Text } = Typography;
 
@@ -83,7 +84,7 @@ const DashboardScreen: React.FC = () => {
 
   // Render
   return (
-    <div className="relative min-h-screen bg-[#F7F9FF] pb-10 overflow-hidden font-sans">
+    <div className="relative min-h-screen bg-[#F7F9FF] pb-32 overflow-hidden font-sans">
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#E0E7FF] rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 opacity-70 pointer-events-none" />
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#F3E8FF] rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3 opacity-70 pointer-events-none" />
@@ -94,26 +95,14 @@ const DashboardScreen: React.FC = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#895BFF] to-[#5B62FF] flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-indigo-200">
-              M
-            </div>
-            <span className="text-[17px] font-bold text-[#111438]">Money Note</span>
+              <img src={logo} className="h-[59px]" />
           </div>
           <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-white/60 backdrop-blur-md flex items-center justify-center border border-white shadow-sm">
+            <div className="w-10 h-10 mr-5 rounded-full bg-white/60 backdrop-blur-md flex items-center justify-center border border-white shadow-sm">
               <BellOutlined className="text-xl text-gray-700" />
             </div>
           </div>
         </div>
-
-        {/* Title */}
-        <div className="mb-6">
-          <Title level={2} style={{ margin: 0, color: "#111438", fontWeight: 800 }}>
-            Tổng quan tài chính
-          </Title>
-          <Text className="text-gray-500 text-[15px]">Theo dõi ví, thu chi và giao dịch của bạn</Text>
-        </div>
-
         {/* Top Summary Cards */}
         <div className="flex flex-col gap-3 mb-6">
           {/* Ví chi tiêu */}
@@ -180,9 +169,9 @@ const DashboardScreen: React.FC = () => {
                 <span className="text-[13px] font-bold text-[#111438]">{formatMoney(totalChart)}</span>
               </div>
               {/* Căn chỉnh text label tự động */}
-              {incomePercent > 0 && <span className="absolute top-[45%] right-2 text-white text-[10px] font-bold drop-shadow-md">{incomePercent}%</span>}
+              {incomePercent > 0 && <span className="absolute top-[45%] right-1 text-white text-[10px] font-bold drop-shadow-md">{incomePercent}%</span>}
               {debtPercent > 0 && <span className="absolute top-4 left-6 text-white text-[10px] font-bold drop-shadow-md">{debtPercent}%</span>}
-              {expensePercent > 0 && <span className="absolute bottom-[20%] left-2 text-white text-[10px] font-bold drop-shadow-md">{expensePercent}%</span>}
+              {expensePercent > 0 && <span className="absolute bottom-[20%] left-3 text-white text-[10px] font-bold drop-shadow-md">{expensePercent}%</span>}
             </div>
 
             <div className="flex flex-col gap-3 flex-1 ml-6">
@@ -358,7 +347,7 @@ const DashboardScreen: React.FC = () => {
           </div>
         </div>
         <div className="fixed bottom-0 left-0 w-full z-50 flex justify-center pointer-events-none">
-        <div className="w-full max-w-[760px] bg-white/95 backdrop-blur-md shadow-[0_-10px_40px_rgba(91,98,255,0.08)] rounded-t-[32px] pointer-events-auto flex items-end justify-between px-6 pb-6 pt-4 border-t border-[#F7F9FF]">
+        <div className="w-full max-w-[760px] bg-white/95 backdrop-blur-md shadow-[0_-10px_40px_rgba(91,98,255,0.08)] rounded-t-[32px] pointer-events-auto flex items-end justify-between px-6 pb-3 border-t border-[#F7F9FF]">
 
           {/* Tab: Tổng quan (Active) */}
           <div className="flex flex-col items-center gap-1.5 cursor-pointer w-[60px]" onClick={() => navigate("/dashboard")}>
