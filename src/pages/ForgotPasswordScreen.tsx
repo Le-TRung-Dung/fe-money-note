@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Button, Card, ConfigProvider, Form, Input, Typography, message } from "antd";
+import {
+  Button,
+  Card,
+  ConfigProvider,
+  Form,
+  Input,
+  Typography,
+  message,
+} from "antd";
 import {
   ArrowLeftOutlined,
   EyeInvisibleOutlined,
@@ -7,7 +15,7 @@ import {
 } from "@ant-design/icons";
 import { CiLock } from "react-icons/ci";
 import { MdPersonOutline } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 import { resetPassword } from "../features/auth/services/authService";
 
@@ -21,7 +29,10 @@ type ForgotPasswordFormValues = {
 
 const ForgotPasswordScreen: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
+
+  const isChangePassword = location.state?.isChangePassword;
 
   const onFinish = async (values: ForgotPasswordFormValues) => {
     try {
@@ -37,11 +48,16 @@ const ForgotPasswordScreen: React.FC = () => {
         newPassword: values.newPassword,
       });
 
-      message.success("Đổi mật khẩu thành công. Vui lòng đăng nhập lại");
-      navigate("/login");
+      if (isChangePassword) {
+        message.success("Đổi mật khẩu thành công.");
+        navigate("/account");
+      } else {
+        message.success("Đổi mật khẩu thành công. Vui lòng đăng nhập lại");
+        navigate("/login");
+      }
     } catch (error) {
       message.error(
-        error instanceof Error ? error.message : "Đổi mật khẩu thất bại"
+        error instanceof Error ? error.message : "Đổi mật khẩu thất bại",
       );
     } finally {
       setLoading(false);
@@ -100,18 +116,22 @@ const ForgotPasswordScreen: React.FC = () => {
             <Button
               type="text"
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate("/login")}
-              className="mb-4"
+              onClick={() =>
+                isChangePassword ? navigate(-1) : navigate("/login")
+              }
+              className="mb-4 p-0"
             >
-              Quay lại đăng nhập
+              {isChangePassword ? "Quay lại" : "Quay lại đăng nhập"}
             </Button>
 
             <div className="mb-8 text-center">
               <Title level={2} style={{ marginBottom: 8, color: "#070B35" }}>
-                Quên mật khẩu
+                {isChangePassword ? "Đổi mật khẩu" : "Quên mật khẩu"}
               </Title>
               <Text type="secondary">
-                Nhập tên đăng nhập và tạo mật khẩu mới. Dữ liệu cũ sẽ được giữ nguyên.
+                {isChangePassword
+                  ? "Nhập tên đăng nhập hiện tại và tạo mật khẩu mới."
+                  : "Nhập tên đăng nhập và tạo mật khẩu mới. Dữ liệu cũ sẽ được giữ nguyên."}
               </Text>
             </div>
 
@@ -189,7 +209,7 @@ const ForgotPasswordScreen: React.FC = () => {
                       }
 
                       return Promise.reject(
-                        new Error("Mật khẩu nhập lại không khớp")
+                        new Error("Mật khẩu nhập lại không khớp"),
                       );
                     },
                   }),
@@ -219,20 +239,23 @@ const ForgotPasswordScreen: React.FC = () => {
                 loading={loading}
                 className="forgot-main-button"
               >
-                Đặt lại mật khẩu
+                {isChangePassword
+                  ? "Xác nhận đổi mật khẩu"
+                  : "Đặt lại mật khẩu"}
               </Button>
             </Form>
 
             <div className="mt-5 rounded-2xl bg-[#F7F8FF] p-4 text-sm font-medium text-[#737895]">
-              Lưu ý: Đây là tài khoản local trên máy của bạn. App chỉ đổi mật khẩu
-              trong IndexedDB, không xóa ví, giao dịch, tiết kiệm hay mục tiêu cũ.
+              Lưu ý: Đây là tài khoản local trên máy của bạn. App chỉ đổi mật
+              khẩu trong IndexedDB, không xóa ví, giao dịch, tiết kiệm hay mục
+              tiêu cũ.
             </div>
           </Card>
         </div>
 
         <style>{`
           .money-input.ant-input-affix-wrapper {
-            height: 58px;
+            height: 50px;
             border-radius: 18px;
             border: 1.5px solid #E3E6F5;
             background: rgba(255, 255, 255, 0.92);
@@ -261,7 +284,7 @@ const ForgotPasswordScreen: React.FC = () => {
           }
 
           .forgot-main-button {
-            height: 58px !important;
+            height: 50px !important;
             border: none !important;
             border-radius: 20px !important;
             background: linear-gradient(90deg, #895BFF 0%, #3453FF 100%) !important;

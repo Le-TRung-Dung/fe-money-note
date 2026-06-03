@@ -38,8 +38,6 @@ const DashboardScreen: React.FC = () => {
   const [pageLoading, setPageLoading] = useState(true);
   const [data, setData] = useState<any>(null);
 
-  console.log(data)
-
   const currentUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
 
   const loadDashboard = async () => {
@@ -137,7 +135,7 @@ const DashboardScreen: React.FC = () => {
       <div className="relative z-10 px-5 pt-12 max-w-[760px] mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
+          <div onClick={() => navigate("/landing")} className="flex items-center gap-2" >
             <img src={logo} className="h-[59px]" />
           </div>
           <div className="relative">

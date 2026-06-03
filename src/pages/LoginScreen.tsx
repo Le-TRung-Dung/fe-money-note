@@ -29,7 +29,7 @@ const LoginPage: React.FC = () => {
       });
 
       message.success("Đăng nhập thành công");
-      navigate("/transactions/create");
+      navigate("/dashboard");
     } catch (error) {
       message.error(
         error instanceof Error ? error.message : "Đăng nhập thất bại"

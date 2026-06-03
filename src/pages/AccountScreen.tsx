@@ -1,24 +1,49 @@
 import { useEffect, useState } from "react";
-import { Button, Card, Modal, Skeleton, Typography, message } from "antd";
+import { Modal, Skeleton, message } from "antd";
 import {
-  ArrowLeftOutlined,
-  LogoutOutlined,
-  SafetyOutlined,
+  BellOutlined,
+  RightOutlined,
   UserOutlined,
+  LockOutlined,
+  BgColorsOutlined,
+  CloudUploadOutlined,
+  QuestionCircleOutlined,
+  SwapOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 import type { User } from "../database/db";
-import {
-  getCurrentUser,
-  logout,
-} from "../features/auth/services/authService";
+import { getCurrentUser, logout } from "../features/auth/services/authService";
+import { FaLock } from "react-icons/fa";
 
-const { Title, Text } = Typography;
+// Component con để render từng dòng menu cài đặt
+const MenuRow = ({ icon, title, subtitle, onClick, danger = false }: any) => (
+  <div
+    onClick={onClick}
+    className="flex items-center p-4 border-b border-gray-50 last:border-0 active:bg-gray-50 cursor-pointer transition-colors"
+  >
+    <div
+      className={`text-[22px] mr-4 ${danger ? "text-red-500" : "text-gray-700"}`}
+    >
+      {icon}
+    </div>
+    <div className="flex-1">
+      <div
+        className={`text-[15px] font-semibold ${danger ? "text-red-500" : "text-[#1A1C29]"}`}
+      >
+        {title}
+      </div>
+      {subtitle && (
+        <div className="text-[13px] text-gray-400 mt-0.5">{subtitle}</div>
+      )}
+    </div>
+    <RightOutlined className="text-gray-300 text-[12px]" />
+  </div>
+);
 
 function AccountScreen() {
   const navigate = useNavigate();
-
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
 
@@ -26,13 +51,11 @@ function AccountScreen() {
     const initPage = async () => {
       try {
         const currentUser = await getCurrentUser();
-
         if (!currentUser) {
           message.error("Bạn cần đăng nhập lại");
           navigate("/login");
           return;
         }
-
         setUser(currentUser);
       } catch (error) {
         message.error("Không thể tải thông tin tài khoản");
@@ -51,9 +74,7 @@ function AccountScreen() {
         "Bạn có chắc muốn đăng xuất không? Dữ liệu local vẫn được giữ nguyên trên máy.",
       okText: "Đăng xuất",
       cancelText: "Hủy",
-      okButtonProps: {
-        danger: true,
-      },
+      okButtonProps: { danger: true },
       centered: true,
       onOk: () => {
         logout();
@@ -65,118 +86,97 @@ function AccountScreen() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F7F9FF] p-5">
-        <Skeleton active avatar paragraph={{ rows: 4 }} />
+      <div className="min-h-screen bg-[#F7F9FF] p-5 flex items-center justify-center">
+        <Skeleton active avatar paragraph={{ rows: 6 }} />
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#F7F9FF] px-5 py-8">
-      <div className="pointer-events-none absolute left-0 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#E0E7FF] blur-[80px] opacity-70" />
-      <div className="pointer-events-none absolute right-0 top-16 h-80 w-80 translate-x-1/3 rounded-full bg-[#F3E8FF] blur-[80px] opacity-70" />
+    // Thêm pb-24 (padding-bottom: 6rem) để nội dung không bị che bởi Bottom Nav chung
+    <div className="min-h-screen bg-[#F7F9FF] font-sans text-[#1A1C29]">
+      <div className="mx-auto max-w-[480px] bg-[#F7F9FF] min-h-screen relative">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-4"></div>
 
-      <div className="relative z-10 mx-auto max-w-[760px]">
-        <div className="mb-5 flex items-center justify-between">
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate("/app/dashboard")}
-          >
-            Quay lại
-          </Button>
+        <div className="px-5">
+          {/* Profile Card */}
+          <div className="bg-white rounded-[24px] p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] mb-6">
+            <div
+              className="flex items-center justify-center mb-6 cursor-pointer"
+              onClick={() => navigate("/profile")}
+            >
+              <div className="flex flex-col justify-center items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                  <img
+                    src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=f3f4f6"
+                    alt="avatar"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h2 className="text-[17px] font-bold m-0 text-center">
+                      {user?.username || "Người dùng"}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Cài đặt Group */}
+          <div className="mb-6">
+            <h3 className="text-[14px] font-bold text-gray-500 mb-3 ml-2">
+              Cài đặt
+            </h3>
+            <div className="bg-white rounded-[24px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden">
+              {/* <MenuRow
+                icon={<UserOutlined />}
+                title="Thông tin cá nhân"
+                subtitle="Cập nhật thông tin của bạn"
+                onClick={() => navigate("/profile")}
+              /> */}
+              <MenuRow
+                icon={<FaLock />}
+                title="Bảo mật"
+                subtitle="Đổi mật khẩu"
+                onClick={() =>
+                  navigate("/forgot-password", {
+                    state: { isChangePassword: true },
+                  })
+                }
+              />
+            </div>
+          </div>
+
+          {/* Tài khoản Group */}
+          <div className="mb-6">
+            <h3 className="text-[14px] font-bold text-gray-500 mb-3 ml-2">
+              Tài khoản
+            </h3>
+            <div className="bg-white rounded-[24px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden">
+              {/* <MenuRow
+                icon={<SwapOutlined />}
+                title="Đổi tài khoản"
+                subtitle="Chuyển sang tài khoản khác"
+                onClick={() => {}}
+              /> */}
+              <MenuRow
+                icon={<LogoutOutlined />}
+                title="Đăng xuất"
+                subtitle="Đăng xuất khỏi ứng dụng"
+                onClick={handleLogout}
+                danger={true}
+              />
+            </div>
+          </div>
+
+          {/* App Info */}
+          <div className="flex justify-center items-center text-gray-400 text-[13px] pb-4">
+            Phiên bản 1.0.0
+          </div>
         </div>
-
-        <div className="mb-6">
-          <Title level={2} style={{ marginBottom: 4, color: "#111438" }}>
-            Tài khoản
-          </Title>
-          <Text type="secondary">
-            Quản lý thông tin tài khoản local của bạn
-          </Text>
-        </div>
-
-        <Card
-          className="mb-5 border-none shadow-[0_10px_35px_rgba(91,98,255,0.08)]"
-          style={{
-            borderRadius: 28,
-          }}
-        >
-          <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-[#F0EEFF] text-[#895BFF]">
-              <UserOutlined className="text-3xl" />
-            </div>
-
-            <div>
-              <div className="text-sm font-medium text-gray-400">
-                Tên đăng nhập
-              </div>
-              <div className="text-[22px] font-black text-[#111438]">
-                {user?.username}
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        <Card
-          className="mb-5 border-none shadow-[0_10px_35px_rgba(91,98,255,0.08)]"
-          style={{
-            borderRadius: 28,
-          }}
-        >
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#ECFDF5] text-[#16A34A]">
-              <SafetyOutlined className="text-xl" />
-            </div>
-
-            <div>
-              <div className="font-black text-[#111438]">Bảo mật</div>
-              <div className="text-sm text-gray-400">
-                Mật khẩu được lưu dạng hash trong IndexedDB
-              </div>
-            </div>
-          </div>
-
-          <Button
-            block
-            onClick={() => navigate("/forgot-password")}
-            style={{
-              height: 44,
-              borderRadius: 16,
-              fontWeight: 700,
-            }}
-          >
-            Đổi / đặt lại mật khẩu
-          </Button>
-        </Card>
-
-        <Card
-          className="border-none shadow-[0_10px_35px_rgba(91,98,255,0.08)]"
-          style={{
-            borderRadius: 28,
-          }}
-        >
-          <div className="mb-4">
-            <div className="font-black text-[#111438]">Đăng xuất</div>
-            <div className="text-sm text-gray-400">
-              Đăng xuất chỉ xóa phiên đăng nhập hiện tại, không xóa dữ liệu.
-            </div>
-          </div>
-
-          <Button
-            danger
-            block
-            icon={<LogoutOutlined />}
-            onClick={handleLogout}
-            style={{
-              height: 48,
-              borderRadius: 16,
-              fontWeight: 800,
-            }}
-          >
-            Đăng xuất tài khoản
-          </Button>
-        </Card>
       </div>
     </div>
   );

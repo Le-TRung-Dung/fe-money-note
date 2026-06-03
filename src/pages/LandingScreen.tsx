@@ -1,11 +1,40 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 // Thông thường trên ReactJS chúng ta dùng react-router-dom để điều hướng thay cho @react-navigation
 import { useNavigate } from "react-router-dom";
-import { Button } from "antd";
+import { Button, message } from "antd";
 import Banner from "../assets/money-note-landing.png";
+import type { User } from "../database/db";
+import { getCurrentUser } from "../features/auth/services/authService";
 
 export default function LandingPage() {
   const navigate = useNavigate();
+
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const initPage = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+
+        if (currentUser) {
+          setUser(currentUser);
+        }
+      } catch (error) {
+        message.error("Không thể tải thông tin tài khoản");
+      } 
+    };
+
+    initPage();
+  }, []);
+
+  const handleStart = () => {
+    if (user) {
+      navigate("/dashboard");
+      return;
+    }
+
+    navigate("/login");
+  };
 
   return (
     // Sử dụng h-[100dvh] để tự động co giãn chính xác theo chiều cao thực tế của trình duyệt (tránh bị che bởi thanh URL)
@@ -21,7 +50,7 @@ export default function LandingPage() {
           {/* Nút bấm Ant Design (Button) được override bằng TailwindCSS để y hệt bản Mobile */}
           <Button
             type="primary"
-            onClick={() => navigate("/login")}
+            onClick={handleStart}
             className="
               w-full h-[60px] rounded-[24px] bg-[#3033F1] border-none
               flex items-center justify-center relative
