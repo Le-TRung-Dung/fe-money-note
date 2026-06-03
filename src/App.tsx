@@ -18,6 +18,7 @@ const App: React.FC = () => {
         <Route path="/Login" element={<LoginPage />} />
         <Route path="/Register" element={<RegisterPage />} />
         <Route path="transactions/create" element={<TransactionCreateScreen />} />
+        <Route path="transactions/:id/edit" element={<TransactionCreateScreen />} />
         <Route path="/dashboard" element={<DashboardScreen />} />
 
         {/* Xử lý trang 404 */}

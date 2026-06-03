@@ -161,3 +161,117 @@ export async function createCategoryForTransaction(payload: {
 
   return category;
 }
+
+export async function getTransactionById(id: string) {
+  return db.transactions.get(id);
+}
+
+export async function updateTransaction(
+  id: string,
+  payload: CreateTransactionPayload
+) {
+  const oldTransaction = await db.transactions.get(id);
+
+  if (!oldTransaction) {
+    throw new Error("Không tìm thấy giao dịch");
+  }
+
+  const now = new Date().toISOString();
+
+  const newTransaction: Transaction = {
+    ...oldTransaction,
+    userId: payload.userId,
+    walletId: payload.walletId,
+    type: payload.type,
+    debtType: payload.debtType,
+    categoryId: payload.categoryId,
+    amount: payload.amount,
+    note: payload.note?.trim(),
+    description: payload.description?.trim(),
+    partner: payload.partner?.trim(),
+    date: payload.date,
+    updatedAt: now,
+  };
+
+  await db.transaction("rw", db.transactions, db.wallets, async () => {
+    await revertTransactionFromWallet(oldTransaction);
+    await applyTransactionToWallet(newTransaction);
+    await db.transactions.put(newTransaction);
+  });
+
+  return newTransaction;
+}
+
+export async function deleteTransaction(id: string) {
+  const transaction = await db.transactions.get(id);
+
+  if (!transaction) {
+    throw new Error("Không tìm thấy giao dịch");
+  }
+
+  await db.transaction("rw", db.transactions, db.wallets, async () => {
+    await revertTransactionFromWallet(transaction);
+    await db.transactions.delete(id);
+  });
+}
+
+async function applyTransactionToWallet(transaction: Transaction) {
+  const wallet = await db.wallets.get(transaction.walletId);
+
+  if (!wallet) {
+    throw new Error("Không tìm thấy ví");
+  }
+
+  const nextBalance = calculateNewWalletBalance({
+    currentBalance: wallet.balance,
+    type: transaction.type,
+    debtType: transaction.debtType,
+    amount: transaction.amount,
+  });
+
+  await db.wallets.update(wallet.id, {
+    balance: nextBalance,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+async function revertTransactionFromWallet(transaction: Transaction) {
+  const wallet = await db.wallets.get(transaction.walletId);
+
+  if (!wallet) {
+    throw new Error("Không tìm thấy ví");
+  }
+
+  let nextBalance = wallet.balance;
+
+  if (transaction.type === "expense") {
+    nextBalance = wallet.balance + transaction.amount;
+  }
+
+  if (transaction.type === "income") {
+    nextBalance = wallet.balance - transaction.amount;
+  }
+
+  if (transaction.type === "debt") {
+    if (transaction.debtType === "borrow") {
+      nextBalance = wallet.balance - transaction.amount;
+    }
+
+    if (transaction.debtType === "lend") {
+      nextBalance = wallet.balance + transaction.amount;
+    }
+
+    if (transaction.debtType === "repay") {
+      nextBalance = wallet.balance + transaction.amount;
+    }
+
+    if (transaction.debtType === "collect") {
+      nextBalance = wallet.balance - transaction.amount;
+    }
+  }
+
+  await db.wallets.update(wallet.id, {
+    balance: nextBalance,
+    updatedAt: new Date().toISOString(),
+  });
+}

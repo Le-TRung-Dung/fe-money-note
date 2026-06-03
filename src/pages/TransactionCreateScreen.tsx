@@ -1,4 +1,4 @@
-import  { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
@@ -6,6 +6,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Popconfirm,
   Select,
   Typography,
   message,
@@ -23,7 +24,7 @@ import {
   SwapOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { STORAGE_KEYS } from "../shared/constants/storageKeys";
 import { ensureDefaultDataForUser } from "../database/seed";
@@ -35,8 +36,11 @@ import type {
 } from "../database/db";
 import {
   createTransaction,
+  deleteTransaction,
   getCategoriesByType,
   getDefaultWalletByUser,
+  getTransactionById,
+  updateTransaction,
 } from "../features/transactions/services/transactionService";
 import { formatMoney } from "../shared/utils/formatMoney";
 import CategoryCreateModal from "../Modal/ModalAddType";
@@ -70,9 +74,15 @@ function TransactionCreateScreen() {
   const [pageLoading, setPageLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
 
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [transactionType, setTransactionType] = useState<TransactionType>("expense");
+  const [transactionType, setTransactionType] =
+    useState<TransactionType>("expense");
 
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 
@@ -106,13 +116,57 @@ function TransactionCreateScreen() {
         }
 
         await ensureDefaultDataForUser(currentUserId);
+
         const defaultWallet = await getDefaultWalletByUser(currentUserId);
+        setWallet(defaultWallet);
+
+        if (isEditMode && id) {
+          const transaction = await getTransactionById(id);
+
+          if (!transaction) {
+            message.error("Không tìm thấy giao dịch");
+            navigate("/dashboard");
+            return;
+          }
+
+          if (transaction.userId !== currentUserId) {
+            message.error("Bạn không có quyền sửa giao dịch này");
+            navigate("/dashboard");
+            return;
+          }
+
+          setTransactionType(transaction.type);
+
+          const editCategories = await getCategoriesByType(
+            currentUserId,
+            transaction.type,
+          );
+
+          setCategories(editCategories);
+
+          form.setFieldsValue({
+            type: transaction.type,
+            debtType: transaction.debtType,
+            categoryId: transaction.categoryId,
+            amount: transaction.amount,
+            note: transaction.note,
+            description: transaction.description,
+            partner: transaction.partner,
+            date: dayjs(transaction.date),
+          });
+
+          if (transaction.description || transaction.partner) {
+            setShowDetails(true);
+          }
+
+          return;
+        }
+
         const defaultCategories = await getCategoriesByType(
           currentUserId,
-          "expense"
+          "expense",
         );
 
-        setWallet(defaultWallet);
         setCategories(defaultCategories);
 
         form.setFieldsValue({
@@ -121,7 +175,7 @@ function TransactionCreateScreen() {
         });
       } catch (error) {
         message.error(
-          error instanceof Error ? error.message : "Không thể tải dữ liệu"
+          error instanceof Error ? error.message : "Không thể tải dữ liệu",
         );
       } finally {
         setPageLoading(false);
@@ -129,7 +183,7 @@ function TransactionCreateScreen() {
     };
 
     initPage();
-  }, [currentUserId, form, navigate]);
+  }, [currentUserId, form, navigate, id, isEditMode]);
 
   const handleTypeChange = async (value: TransactionType) => {
     if (!currentUserId) return;
@@ -147,7 +201,10 @@ function TransactionCreateScreen() {
 
   const handleCategorySuccess = async (newCategory: Category) => {
     if (!currentUserId) return;
-    const nextCategories = await getCategoriesByType(currentUserId, transactionType);
+    const nextCategories = await getCategoriesByType(
+      currentUserId,
+      transactionType,
+    );
     setCategories(nextCategories);
     form.setFieldsValue({ categoryId: newCategory.id });
   };
@@ -167,6 +224,25 @@ function TransactionCreateScreen() {
 
       setLoading(true);
 
+      if (isEditMode && id) {
+        await updateTransaction(id, {
+          userId: currentUserId,
+          walletId: wallet.id,
+          type: values.type,
+          debtType: values.debtType,
+          categoryId: values.categoryId,
+          amount: values.amount,
+          note: values.note,
+          description: values.description,
+          partner: values.partner,
+          date: values.date.format("YYYY-MM-DD"),
+        });
+
+        message.success("Đã cập nhật giao dịch");
+        navigate("/dashboard");
+        return;
+      }
+
       await createTransaction({
         userId: currentUserId,
         walletId: wallet.id,
@@ -181,10 +257,14 @@ function TransactionCreateScreen() {
       });
 
       message.success("Đã lưu giao dịch");
-      // navigate("/app/dashboard");
+      navigate("/dashboard");
     } catch (error) {
       message.error(
-        error instanceof Error ? error.message : "Lưu giao dịch thất bại"
+        error instanceof Error
+          ? error.message
+          : isEditMode
+            ? "Cập nhật giao dịch thất bại"
+            : "Lưu giao dịch thất bại",
       );
     } finally {
       setLoading(false);
@@ -199,13 +279,36 @@ function TransactionCreateScreen() {
     );
   }
 
+  const handleDelete = async () => {
+    try {
+      if (!id) return;
+
+      setDeleteLoading(true);
+
+      await deleteTransaction(id);
+
+      message.success("Đã xóa giao dịch");
+      navigate("/dashboard");
+    } catch (error) {
+      message.error(
+        error instanceof Error ? error.message : "Xóa giao dịch thất bại",
+      );
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-[#F7F8FF] px-5 py-6 overflow-hidden">
       <div className="absolute top-0 left-0 w-64 h-64 bg-[#E0E7FF] rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2 opacity-60 pointer-events-none" />
       <div className="absolute top-20 right-0 w-80 h-80 bg-[#F3E8FF] rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3 opacity-60 pointer-events-none" />
 
-      <div className="absolute top-24 left-16 text-[#B4B8FF] text-2xl pointer-events-none">✦</div>
-      <div className="absolute top-32 right-12 text-[#B4B8FF] text-xl pointer-events-none">✦</div>
+      <div className="absolute top-24 left-16 text-[#B4B8FF] text-2xl pointer-events-none">
+        ✦
+      </div>
+      <div className="absolute top-32 right-12 text-[#B4B8FF] text-xl pointer-events-none">
+        ✦
+      </div>
       <div className="absolute top-40 right-20 grid grid-cols-3 gap-2 pointer-events-none">
         {[...Array(9)].map((_, i) => (
           <div key={i} className="w-1 h-1 bg-[#D4D7FF] rounded-full" />
@@ -234,10 +337,12 @@ function TransactionCreateScreen() {
             level={2}
             style={{ marginBottom: 4, color: "#111438", fontWeight: 800 }}
           >
-            Thêm giao dịch
+            {isEditMode ? "Sửa giao dịch" : "Thêm giao dịch"}
           </Title>
           <Text type="secondary" className="text-[15px]">
-            Ghi lại khoản chi, thu nhập hoặc vay nợ
+            {isEditMode
+              ? "Cập nhật thông tin giao dịch của bạn"
+              : "Ghi lại khoản chi, thu nhập hoặc vay nợ"}
           </Text>
         </div>
 
@@ -296,7 +401,9 @@ function TransactionCreateScreen() {
               <Form.Item
                 name="debtType"
                 label="Loại vay nợ"
-                rules={[{ required: true, message: "Vui lòng chọn loại vay nợ" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn loại vay nợ" },
+                ]}
                 className="custom-form-item"
               >
                 <Select
@@ -316,7 +423,9 @@ function TransactionCreateScreen() {
                 {
                   validator: (_, value) => {
                     if (!value || value <= 0)
-                      return Promise.reject(new Error("Số tiền phải lớn hơn 0"));
+                      return Promise.reject(
+                        new Error("Số tiền phải lớn hơn 0"),
+                      );
                     return Promise.resolve();
                   },
                 },
@@ -327,7 +436,9 @@ function TransactionCreateScreen() {
                 min={0}
                 placeholder="0 đ"
                 controls={false}
-                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+                formatter={(value) =>
+                  `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                }
                 parser={(value) => Number(value?.replace(/\./g, "") || 0) as 0}
               />
             </Form.Item>
@@ -342,8 +453,8 @@ function TransactionCreateScreen() {
                   transactionType === "expense"
                     ? "Nhóm chi tiêu"
                     : transactionType === "income"
-                    ? "Nhóm thu nhập"
-                    : "Nhóm vay nợ"
+                      ? "Nhóm thu nhập"
+                      : "Nhóm vay nợ"
                 }
                 className="custom-form-item"
                 rules={[{ required: true, message: "Vui lòng chọn nhóm" }]}
@@ -389,7 +500,9 @@ function TransactionCreateScreen() {
                 name="date"
                 label="Thứ, ngày tháng"
                 className="custom-form-item"
-                rules={[{ required: true, message: "Vui lòng chọn ngày giao dịch" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn ngày giao dịch" },
+                ]}
               >
                 <DatePicker
                   className="w-full custom-datepicker-with-icon"
@@ -406,7 +519,11 @@ function TransactionCreateScreen() {
                 className="bg-white px-4 z-10 text-[#5B62FF] font-medium cursor-pointer flex items-center gap-2 hover:text-[#3453FF] transition-colors"
                 onClick={() => setShowDetails(!showDetails)}
               >
-                {showDetails ? <UpOutlined className="text-xs" /> : <DownOutlined className="text-xs" />}
+                {showDetails ? (
+                  <UpOutlined className="text-xs" />
+                ) : (
+                  <DownOutlined className="text-xs" />
+                )}
                 {showDetails ? "Ẩn chi tiết" : "Hiện chi tiết"}
               </div>
             </div>
@@ -417,7 +534,11 @@ function TransactionCreateScreen() {
                   <div className="absolute left-3 top-[38px] z-10 w-9 h-9 rounded-full bg-[#F3F4FF] text-[#5B62FF] flex items-center justify-center">
                     <TeamOutlined className="text-lg" />
                   </div>
-                  <Form.Item name="partner" label="Tiêu với ai" className="custom-form-item">
+                  <Form.Item
+                    name="partner"
+                    label="Tiêu với ai"
+                    className="custom-form-item"
+                  >
                     <Input
                       placeholder="Nhập tên hoặc chọn người"
                       className="custom-input-with-icon"
@@ -426,7 +547,11 @@ function TransactionCreateScreen() {
                   </Form.Item>
                 </div>
 
-                <Form.Item name="description" label="Chi tiết mô tả" className="custom-form-item">
+                <Form.Item
+                  name="description"
+                  label="Chi tiết mô tả"
+                  className="custom-form-item"
+                >
                   <TextArea
                     rows={3}
                     placeholder="Mô tả chi tiết hơn nếu cần"
@@ -446,8 +571,33 @@ function TransactionCreateScreen() {
                 loading={loading}
                 className="money-save-button"
               >
-                Lưu
+                {isEditMode ? "Lưu thay đổi" : "Lưu"}
               </Button>
+
+              {isEditMode && (
+                <Popconfirm
+                  title="Xóa giao dịch"
+                  description="Bạn có chắc muốn xóa giao dịch này không?"
+                  okText="Xóa"
+                  cancelText="Hủy"
+                  okButtonProps={{ danger: true }}
+                  onConfirm={handleDelete}
+                >
+                  <Button
+                    danger
+                    block
+                    loading={deleteLoading}
+                    className="mt-3"
+                    style={{
+                      height: 40,
+                      borderRadius: 16,
+                      fontWeight: 700,
+                    }}
+                  >
+                    Xóa giao dịch
+                  </Button>
+                </Popconfirm>
+              )}
             </div>
           </Form>
         </Card>
