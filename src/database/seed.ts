@@ -24,6 +24,26 @@ export async function ensureDefaultDataForUser(userId: string) {
     });
   }
 
+  const savingWallet = await db.wallets
+    .where("userId")
+    .equals(userId)
+    .filter((wallet) => wallet.type === "saving_wallet")
+    .first();
+
+  if (!savingWallet) {
+    await db.wallets.add({
+      id: createId("wallet"),
+      userId,
+      name: "Ví tiết kiệm",
+      type: "saving_wallet",
+      balance: 0,
+      currency: "VND",
+      isDefault: false,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
   const categoryCount = await db.categories
     .where("userId")
     .equals(userId)

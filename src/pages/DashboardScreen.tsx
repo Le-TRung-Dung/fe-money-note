@@ -533,11 +533,11 @@ const DashboardScreen: React.FC = () => {
             {/* Tab: Ngân sách */}
             <div
               className="flex flex-col items-center gap-1.5 cursor-pointer w-[60px]"
-              onClick={() => navigate("/budgets")}
+               onClick={() => navigate("/savings")}
             >
               <PieChartOutlined className="text-[22px] text-gray-400 hover:text-[#895BFF] transition-colors" />
               <span className="text-[10px] font-medium text-gray-400">
-                Ngân sách
+                Tiết kiệm
               </span>
             </div>
 
