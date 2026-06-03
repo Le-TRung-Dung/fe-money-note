@@ -23,6 +23,9 @@ import { STORAGE_KEYS } from "../shared/constants/storageKeys";
 import { formatMoney } from "../shared/utils/formatMoney";
 import { getDashboardSummary } from "../features/dashboard/services/dashboardService";
 import logo from "../assets/logo.png";
+import { MdHome } from "react-icons/md";
+import { GrTransaction } from "react-icons/gr";
+import { GiPieChart } from "react-icons/gi";
 
 const formatCompactMoney = (num: number) => {
   if (num >= 1000000) return (num / 1000000).toFixed(1).replace(".0", "") + "M";
@@ -503,7 +506,7 @@ const DashboardScreen: React.FC = () => {
               className="flex flex-col items-center gap-1.5 cursor-pointer w-[60px]"
               onClick={() => navigate("/dashboard")}
             >
-              <AppstoreFilled className="text-[22px] text-[#895BFF]" />
+              <MdHome className="text-[22px] text-[#895BFF]" />
               <span className="text-[10px] font-bold text-[#895BFF]">
                 Tổng quan
               </span>
@@ -514,7 +517,7 @@ const DashboardScreen: React.FC = () => {
               className="flex flex-col items-center gap-1.5 cursor-pointer w-[60px]"
               onClick={() => navigate("/transactions")}
             >
-              <ProfileOutlined className="text-[22px] text-gray-400 hover:text-[#895BFF] transition-colors" />
+              <GrTransaction className="text-[22px] text-gray-400 hover:text-[#895BFF] transition-colors" />
               <span className="text-[10px] font-medium text-gray-400">
                 Giao dịch
               </span>
@@ -535,7 +538,7 @@ const DashboardScreen: React.FC = () => {
               className="flex flex-col items-center gap-1.5 cursor-pointer w-[60px]"
                onClick={() => navigate("/savings")}
             >
-              <PieChartOutlined className="text-[22px] text-gray-400 hover:text-[#895BFF] transition-colors" />
+              <GiPieChart className="text-[22px] text-gray-400 hover:text-[#895BFF] transition-colors" />
               <span className="text-[10px] font-medium text-gray-400">
                 Tiết kiệm
               </span>

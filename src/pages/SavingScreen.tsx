@@ -1,17 +1,28 @@
 import { useEffect, useState } from "react";
-import { Button, Empty, Progress, Skeleton, message } from "antd";
+import { Button, Empty, Skeleton, message } from "antd";
 import {
   ArrowDownOutlined,
   ArrowLeftOutlined,
   ArrowUpOutlined,
   PlusOutlined,
+  QuestionCircleOutlined,
+  EyeOutlined,
+  RightOutlined,
+  PercentageOutlined,
+  GiftOutlined,
+  CalendarOutlined,
+  PieChartOutlined,
+  CalculatorOutlined,
+  LockOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import ketsat from "../assets/ket_sat_tien_nen_trong_suot.png";
 import dayjs from "dayjs";
 
 import { STORAGE_KEYS } from "../shared/constants/storageKeys";
 import { formatMoney } from "../shared/utils/formatMoney";
 import { ensureDefaultDataForUser } from "../database/seed";
+import conlon from "../assets/conlon.png";
 import type { SavingGoal, SavingTransaction, Wallet } from "../database/db";
 import {
   getSavingTransactions,
@@ -19,13 +30,11 @@ import {
 } from "../features/savings/services/savingService";
 import { getSavingGoalsByUser } from "../features/savings/services/savingGoalService";
 import SavingGoalModal from "../Modal/SavingGoalModal";
-import { getSavingMonthlyReport, type SavingMonthlyReport } from "../features/savings/services/savingReportService";
-
-const formatCompactMoney = (num: number) => {
-  if (num >= 1000000) return (num / 1000000).toFixed(1).replace(".0", "") + "M";
-  if (num >= 1000) return (num / 1000).toFixed(0) + "K";
-  return num.toString();
-};
+import muiten from "../assets/muiten.png";
+import {
+  getSavingMonthlyReport,
+  type SavingMonthlyReport,
+} from "../features/savings/services/savingReportService";
 
 function SavingScreen() {
   const navigate = useNavigate();
@@ -33,15 +42,11 @@ function SavingScreen() {
   const [loading, setLoading] = useState(true);
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [transactions, setTransactions] = useState<SavingTransaction[]>([]);
-  console.log(transactions)
-
-
   const [goals, setGoals] = useState<SavingGoal[]>([]);
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<SavingGoal | null>(null);
-  const [monthlyReport, setMonthlyReport] = useState<SavingMonthlyReport | null>(
-  null
-);
+  const [monthlyReport, setMonthlyReport] =
+    useState<SavingMonthlyReport | null>(null);
 
   const currentUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
 
@@ -83,15 +88,10 @@ function SavingScreen() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F7F9FF] p-5">
-                <Skeleton active paragraph={{ rows: 6 }} />     {" "}
+        <Skeleton active paragraph={{ rows: 6 }} />
       </div>
     );
   }
-
-  const handleOpenCreateGoal = () => {
-    setEditingGoal(null);
-    setGoalModalOpen(true);
-  };
 
   const handleOpenEditGoal = (goal: SavingGoal) => {
     setEditingGoal(goal);
@@ -104,406 +104,345 @@ function SavingScreen() {
     await loadData();
   };
 
+  // Tính toán số dư chạy dồn (Running Balance) cho lịch sử giao dịch
+  let runningBalance = wallet?.balance || 0;
+  const mappedTransactions = transactions.map((t) => {
+    const balanceAfter = runningBalance;
+    if (t.type === "deposit") runningBalance -= t.amount;
+    else runningBalance += t.amount;
+    return { ...t, balanceAfter };
+  });
+
+  // -------------------------------------------------------------
+  // Xử lý dữ liệu động cho Chart
+  // -------------------------------------------------------------
+  const chartData = monthlyReport?.monthlyData || [];
+  const maxVal = Math.max(...chartData.map((d) => d.netAmount), 1);
+  const minVal = Math.min(...chartData.map((d) => d.netAmount), 0);
+  const range = maxVal - minVal;
+
+  const points = chartData.map((d, i) => {
+    const x = chartData.length > 1 ? i * (300 / (chartData.length - 1)) : 150;
+    const y = range === 0 ? 80 : 80 - ((d.netAmount - minVal) / range) * 50;
+    return { x, y, val: d.netAmount, label: d.monthLabel.split("/")[0] };
+  });
+
+  const pathD = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x},${p.y}`)
+    .join(" ");
+
+  // -------------------------------------------------------------
+  // Xử lý logic % so với tháng trước
+  // -------------------------------------------------------------
+  let diffPercentText = "0%";
+  if (monthlyReport) {
+    if (
+      monthlyReport.diffPercent !== null &&
+      monthlyReport.diffPercent !== undefined
+    ) {
+      diffPercentText = `${monthlyReport.diffPercent > 0 ? "+" : ""}${monthlyReport.diffPercent}%`;
+    } else if (monthlyReport.diffAmount !== 0) {
+      // Khi diffPercent null (do tháng trước = 0) nhưng diffAmount khác 0
+      diffPercentText = monthlyReport.diffAmount > 0 ? "+100%" : "-100%";
+    }
+  }
+
+  const isDecreaseTrend = monthlyReport?.trend === "decrease";
+
   return (
-    <div className="min-h-screen bg-[#F7F9FF] px-5 py-8 pb-28">
-      {monthlyReport && (
-        <div className="mb-6 rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
-              <div className="text-[16px] font-bold text-[#111438]">
-                Báo cáo tiết kiệm theo tháng
-              </div>
-              <div className="text-xs text-gray-400">
-                So sánh số tiền tiết kiệm ròng giữa các tháng
-              </div>
-            </div>
-
-            <div
-              className={`rounded-full px-3 py-1 text-xs font-bold ${
-                monthlyReport.trend === "increase"
-                  ? "bg-[#ECFDF5] text-[#16A34A]"
-                  : monthlyReport.trend === "decrease"
-                    ? "bg-[#FEF2F2] text-[#EF4444]"
-                    : "bg-[#F3F4F6] text-gray-500"
-              }`}
-            >
-              {monthlyReport.trend === "increase"
-                ? "Tăng"
-                : monthlyReport.trend === "decrease"
-                  ? "Giảm"
-                  : "Không đổi"}
-            </div>
-          </div>
-
-          <div className="mb-5 grid grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-[#F7F8FF] p-4">
-              <div className="text-xs font-medium text-gray-400">Tháng này</div>
-              <div className="mt-1 text-[20px] font-black text-[#111438]">
-                {formatMoney(monthlyReport.currentMonth.netAmount)}
-              </div>
-              <div className="mt-1 text-xs text-gray-400">
-                {monthlyReport.currentMonth.monthLabel}
-              </div>
-            </div>
-
-            <div className="rounded-2xl bg-[#F7F8FF] p-4">
-              <div className="text-xs font-medium text-gray-400">
-                Tháng trước
-              </div>
-              <div className="mt-1 text-[20px] font-black text-[#111438]">
-                {monthlyReport.previousMonth
-                  ? formatMoney(monthlyReport.previousMonth.netAmount)
-                  : formatMoney(0)}
-              </div>
-              <div className="mt-1 text-xs text-gray-400">
-                {monthlyReport.previousMonth?.monthLabel || "Chưa có dữ liệu"}
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-5 rounded-2xl bg-[#FAFAFF] p-4">
-            <div className="text-xs font-medium text-gray-400">
-              So với tháng trước
-            </div>
-
-            <div
-              className={`mt-1 text-[22px] font-black ${
-                monthlyReport.diffAmount > 0
-                  ? "text-[#16A34A]"
-                  : monthlyReport.diffAmount < 0
-                    ? "text-[#EF4444]"
-                    : "text-[#111438]"
-              }`}
-            >
-              {monthlyReport.diffAmount > 0 ? "+" : ""}
-              {formatMoney(monthlyReport.diffAmount)}
-            </div>
-
-            <div className="mt-1 text-xs text-gray-400">
-              {monthlyReport.diffPercent === null
-                ? "Tháng trước chưa có số liệu để tính phần trăm"
-                : `${monthlyReport.diffAmount > 0 ? "Tăng" : "Giảm"} ${Math.abs(
-                    monthlyReport.diffPercent,
-                  )}% so với tháng trước`}
-            </div>
-          </div>
-
-          <div className="relative h-44 rounded-2xl bg-[#FAFAFF] px-3 pb-8 pt-4">
-            <div className="absolute left-3 top-3 text-xs font-semibold text-gray-400">
-              6 tháng gần nhất
-            </div>
-
-            <div className="flex h-full items-end justify-between gap-2 pt-8">
-              {monthlyReport.monthlyData.map((item) => {
-                const maxValue = Math.max(
-                  ...monthlyReport.monthlyData.map((month) =>
-                    Math.abs(month.netAmount),
-                  ),
-                  1,
-                );
-
-                const heightPercent = Math.min(
-                  (Math.abs(item.netAmount) / maxValue) * 100,
-                  100,
-                );
-
-                const isCurrentMonth =
-                  item.month === monthlyReport.currentMonth.month;
-
-                return (
-                  <div
-                    key={item.month}
-                    className="flex h-full flex-1 flex-col items-center justify-end gap-2"
-                  >
-                    <div className="relative flex h-full w-full items-end justify-center">
-                      {item.netAmount !== 0 && (
-                        <div className="absolute -top-5 whitespace-nowrap text-[10px] font-bold text-[#895BFF]">
-                          {formatCompactMoney(Math.abs(item.netAmount))}
-                        </div>
-                      )}
-
-                      <div
-                        className={`w-full max-w-[28px] rounded-t-xl transition-all ${
-                          item.netAmount >= 0 ? "bg-[#895BFF]" : "bg-[#EF4444]"
-                        } ${isCurrentMonth ? "opacity-100" : "opacity-60"}`}
-                        style={{
-                          height: `${heightPercent}%`,
-                          minHeight: item.netAmount !== 0 ? 8 : 0,
-                        }}
-                      />
-                    </div>
-
-                    <div
-                      className={`text-[10px] font-bold ${
-                        isCurrentMonth ? "text-[#895BFF]" : "text-gray-400"
-                      }`}
-                    >
-                      {item.monthLabel.slice(0, 2)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-           {" "}
+    <div className="min-h-screen bg-[#F7F9FF] px-4 py-6 pb-28 font-sans">
       <div className="mx-auto max-w-[760px]">
-               {" "}
-        <div className="mb-5 flex items-center justify-between">
-                   {" "}
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <ArrowLeftOutlined
+            className="text-xl cursor-pointer text-[#111438]"
             onClick={() => navigate("/dashboard")}
-          >
-                        Quay lại          {" "}
-          </Button>
-                   {" "}
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate("/savings/create")}
-          >
-                        Thêm          {" "}
-          </Button>
-                 {" "}
+          />
+          <h1 className="m-0 text-lg font-black text-[#111438]">
+            Gửi tiết kiệm
+          </h1>
+          <QuestionCircleOutlined className="text-xl cursor-pointer text-[#111438]" />
         </div>
-               {" "}
-        <div className="mb-5">
-                   {" "}
-          <div className="text-[24px] font-black text-[#111438]">
-                        Ví tiết kiệm          {" "}
-          </div>
-                   {" "}
-          <div className="text-sm text-gray-500">
-                        Theo dõi tiền tiết kiệm riêng, không ảnh hưởng ví chi
-            tiêu          {" "}
-          </div>
-                 {" "}
-        </div>
-               {" "}
-        <div className="mb-6 rounded-[28px] bg-gradient-to-br from-[#895BFF] to-[#5B62FF] p-6 text-white shadow-[0_18px_40px_rgba(91,98,255,0.25)]">
-                   {" "}
-          <div className="text-sm opacity-80">Tổng tiền tiết kiệm</div>         {" "}
-          <div className="mt-2 text-[32px] font-black">
-                        {formatMoney(wallet?.balance || 0)}         {" "}
-          </div>
-                   {" "}
-          <div className="mt-2 text-sm opacity-80">
-                        {wallet?.name || "Ví tiết kiệm"}         {" "}
-          </div>
-                 {" "}
-        </div>
-               {" "}
-        <div className="mb-6 rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
-                   {" "}
-          <div className="mb-5 flex items-center justify-between">
-                       {" "}
-            <div>
-                           {" "}
-              <div className="text-[16px] font-bold text-[#111438]">
-                                Mục tiêu tiết kiệm              {" "}
-              </div>
-                           {" "}
-              <div className="text-xs text-gray-400">
-                                Theo dõi tiến độ để có động lực tiết kiệm hơn  
-                           {" "}
-              </div>
-                         {" "}
+
+        {/* Top Chart Card */}
+        <div className="relative mb-4 overflow-hidden rounded-[24px] bg-gradient-to-br from-[#895BFF] to-[#6744FF] p-5 text-white shadow-[0_12px_30px_rgba(137,91,255,0.25)]">
+          <div className="relative z-10 flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 rounded-xl bg-white/20 px-3 py-1.5 text-xs font-medium backdrop-blur-md">
+              Tháng {dayjs().format("M/YYYY")}{" "}
+              <ArrowDownOutlined className="text-[10px]" />
             </div>
-                       {" "}
-            <Button type="primary" onClick={handleOpenCreateGoal}>
-                            + Tạo mục tiêu            {" "}
-            </Button>
-                     {" "}
+
+            {/* Logic render % tăng giảm ở đây */}
+            {monthlyReport && (
+              <div
+                className={`flex items-center gap-1 rounded-xl bg-white/20 px-3 py-1.5 text-xs font-medium backdrop-blur-md ${
+                  isDecreaseTrend ? "text-red-200" : "text-green-200"
+                }`}
+              >
+                {isDecreaseTrend ? (
+                  <ArrowDownOutlined className="text-[10px]" />
+                ) : (
+                  <ArrowUpOutlined className="text-[10px]" />
+                )}
+                {diffPercentText} so với tháng trước
+              </div>
+            )}
           </div>
-                   {" "}
-          {goals.length === 0 && (
-            <Empty description="Chưa có mục tiêu tiết kiệm" />
-          )}
-                   {" "}
-          <div className="flex flex-col gap-4">
-                       {" "}
-            {goals.map((goal) => {
-              const currentAmount = wallet?.balance || 0;
 
-              const percent =
-                goal.targetAmount > 0
-                  ? Math.min(
-                      Math.round((currentAmount / goal.targetAmount) * 100),
-                      100,
-                    )
-                  : 0;
+          {/* SVG Line Chart Simulator */}
+          <div className="relative z-10 mt-6 h-32 w-full">
+            <svg
+              viewBox="-10 0 320 110"
+              className="h-full w-full overflow-visible"
+              preserveAspectRatio="none"
+            >
+              <path
+                d={pathD}
+                fill="none"
+                stroke="rgba(255,255,255,0.8)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
 
-              const remainingAmount = Math.max(
-                goal.targetAmount - currentAmount,
-                0,
-              );
-              const isCompleted = percent >= 100;
+              {/* Vẽ các điểm tròn */}
+              {points.map((p, i) => (
+                <circle
+                  key={i}
+                  cx={p.x}
+                  cy={p.y}
+                  r={i === points.length - 1 ? "5" : "3"}
+                  fill="white"
+                  className={
+                    i === points.length - 1
+                      ? "stroke-[#895BFF] stroke-[3px]"
+                      : ""
+                  }
+                />
+              ))}
 
-              return (
-                <div
-                  key={goal.id}
-                  onClick={() => handleOpenEditGoal(goal)}
-                  className="cursor-pointer rounded-[22px] border border-[#EEF0FF] bg-[#FAFAFF] p-4 transition hover:bg-[#F7F8FF]"
+              {/* Bong bóng giá trị nằm ở điểm cuối cùng */}
+              {points.length > 0 && (
+                <g
+                  transform={`translate(${Math.max(
+                    0,
+                    Math.min(230, points[points.length - 1].x - 45),
+                  )}, ${Math.max(0, points[points.length - 1].y - 30)})`}
                 >
-                                   {" "}
-                  <div className="mb-3 flex items-start justify-between gap-3">
-                                       {" "}
-                    <div className="flex items-center gap-3">
-                                           {" "}
-                      <div
-                        className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl"
-                        style={{
-                          backgroundColor: `${goal.color || "#895BFF"}18`,
-                        }}
-                      >
-                                                {goal.icon || "🎯"}             
-                               {" "}
-                      </div>
-                                           {" "}
-                      <div>
-                                               {" "}
-                        <div className="font-black text-[#111438]">
-                                                    {goal.name}                 
-                               {" "}
-                        </div>
-                                               {" "}
-                        <div className="mt-0.5 text-xs text-gray-400">
-                                                    Mục tiêu:{" "}
-                          {formatMoney(goal.targetAmount)}                     
-                           {" "}
-                        </div>
-                                             {" "}
-                      </div>
-                                         {" "}
-                    </div>
-                                       {" "}
-                    <div
-                      className={`rounded-full px-3 py-1 text-xs font-bold ${
-                        isCompleted
-                          ? "bg-[#ECFDF5] text-[#16A34A]"
-                          : "bg-[#F0EEFF] text-[#895BFF]"
-                      }`}
-                    >
-                                           {" "}
-                      {isCompleted ? "Hoàn thành" : `${percent}%`}             
-                           {" "}
-                    </div>
-                                     {" "}
-                  </div>
-                                   {" "}
-                  <Progress
-                    percent={percent}
-                    showInfo={false}
-                    strokeColor={isCompleted ? "#22C55E" : "#895BFF"}
-                    trailColor="#EEF0FF"
+                  <rect
+                    x="0"
+                    y="0"
+                    width="90"
+                    height="22"
+                    rx="11"
+                    fill="white"
                   />
-                                   {" "}
-                  <div className="mt-3 grid grid-cols-2 gap-3">
-                                       {" "}
-                    <div className="rounded-2xl bg-white p-3">
-                                           {" "}
-                      <div className="text-xs text-gray-400">Đã có</div>       
-                                   {" "}
-                      <div className="mt-1 font-black text-[#111438]">
-                                                {formatMoney(currentAmount)}   
-                                         {" "}
-                      </div>
-                                         {" "}
-                    </div>
-                                       {" "}
-                    <div className="rounded-2xl bg-white p-3">
-                                           {" "}
-                      <div className="text-xs text-gray-400">
-                                               {" "}
-                        {isCompleted ? "Vượt mục tiêu" : "Còn thiếu"}           
-                                 {" "}
-                      </div>
-                                           {" "}
-                      <div
-                        className={`mt-1 font-black ${
-                          isCompleted ? "text-[#16A34A]" : "text-[#EF4444]"
-                        }`}
-                      >
-                                               {" "}
-                        {isCompleted
-                          ? formatMoney(currentAmount - goal.targetAmount)
-                          : formatMoney(remainingAmount)}
-                                             {" "}
-                      </div>
-                                         {" "}
-                    </div>
-                                     {" "}
-                  </div>
-                                   {" "}
-                  {goal.deadline && (
-                    <div className="mt-3 text-xs font-medium text-gray-400">
-                                            Hạn mong muốn:{" "}
-                      {dayjs(goal.deadline).format("DD/MM/YYYY")}               
-                         {" "}
-                    </div>
-                  )}
-                  {goal.description && (
-                    <div className="mt-2 text-sm text-gray-500">
-                      {goal.description}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                  <text
+                    x="45"
+                    y="15"
+                    textAnchor="middle"
+                    fill="#895BFF"
+                    fontSize="11"
+                    fontWeight="bold"
+                  >
+                    {formatMoney(points[points.length - 1].val)}
+                  </text>
+                  <polygon points="40,22 50,22 45,26" fill="white" />
+                </g>
+              )}
+
+              {/* Nhãn trục X (Tháng) */}
+              <g
+                fill="rgba(255,255,255,0.6)"
+                fontSize="10"
+                transform="translate(0, 105)"
+              >
+                {points.map((p, i) => (
+                  <text key={i} x={p.x} textAnchor="middle">
+                    {p.label}
+                  </text>
+                ))}
+              </g>
+            </svg>
           </div>
         </div>
-        <div className="rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
-          <div className="mb-5 text-[16px] font-bold text-[#111438]">
-            Lịch sử tiết kiệm
+
+        {/* Total Money Card */}
+        <div className="mb-4 flex items-center justify-between rounded-[24px] bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+          <div>
+            <div className="mb-1 flex items-center gap-2 text-[13px] font-medium text-gray-500">
+              Tổng tiền tiết kiệm <EyeOutlined className="text-gray-400" />
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-[28px] font-black text-[#111438]">
+                {formatMoney(wallet?.balance || 0)}
+              </span>
+            </div>
           </div>
+          <div className="relative flex h-24 w-24 items-center justify-center">
+            <img src={ketsat} />
+          </div>
+        </div>
+
+        {/* Goal Progress Card */}
+        {goals.map((goal) => {
+          const currentAmount = wallet?.balance || 0;
+          const percent =
+            goal.targetAmount > 0
+              ? Math.min(
+                  Math.round((currentAmount / goal.targetAmount) * 100),
+                  100,
+                )
+              : 0;
+
+          return (
+            <div
+              key={goal.id}
+              onClick={() => handleOpenEditGoal(goal)}
+              className="mb-4 cursor-pointer rounded-[24px] bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition active:scale-[0.98]"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-[#F4F1FF]">
+                    <img src={muiten} className="ml-1" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1 text-[13px] text-gray-500">
+                      Mục tiêu:{" "}
+                      <span className="font-bold text-[#895BFF]">
+                        {goal.name}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 text-[15px] font-black text-[#111438]">
+                      {formatMoney(currentAmount)}{" "}
+                      <span className="text-xs font-medium text-gray-400">
+                        / {formatMoney(goal.targetAmount)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <RightOutlined className="text-xs text-gray-400" />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-[#F0F2F5]">
+                  <div
+                    className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-[#895BFF] to-[#6744FF] transition-all duration-500 ease-out"
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+                <div className="rounded-full bg-[#F4F1FF] px-3 py-1 text-xs font-bold text-[#895BFF]">
+                  {percent}%
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => navigate("/savings/create")}
+          className="mb-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-[14px] border-none bg-[#895BFF] px-4 text-white shadow-[0_8px_22px_rgba(137,91,255,0.28)] transition active:scale-95"
+        >
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/20">
+            <PlusOutlined className="text-[13px] text-white" />
+          </span>
+
+          <span className="inline-block whitespace-nowrap text-[13px] leading-none text-white">
+            Giao dịch
+          </span>
+        </button>
+
+        {/* Transaction History */}
+        <div className="mb-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="text-[16px] font-black text-[#111438]">
+              Lịch sử giao dịch
+            </div>
+            <div className="cursor-pointer text-[13px] font-medium text-[#895BFF]">
+              Xem tất cả <RightOutlined className="text-[10px]" />
+            </div>
+          </div>
+
           {transactions.length === 0 && (
             <Empty description="Chưa có giao dịch tiết kiệm" />
           )}
-          <div className="flex flex-col gap-3">
-            {transactions.map((item) => {
+
+          <div className="flex flex-col gap-3 rounded-[24px] bg-white p-3 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+            {mappedTransactions.map((item) => {
               const isDeposit = item.type === "deposit";
 
               return (
                 <div
                   key={item.id}
                   onClick={() => navigate(`/savings/${item.id}/edit`)}
-                  className="flex cursor-pointer items-center justify-between rounded-2xl border-b border-gray-100 px-2 py-3 transition hover:bg-[#F7F8FF] last:border-0"
+                  className="flex cursor-pointer items-center justify-between rounded-[16px] p-2 transition hover:bg-[#F7F9FF]"
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-full text-lg ${
+                      className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold ${
                         isDeposit
-                          ? "bg-[#ECFDF5] text-[#22C55E]"
-                          : "bg-[#FEF2F2] text-[#EF4444]"
+                          ? "bg-[#ECFDF5] text-[#10B981]"
+                          : "bg-[#F4F1FF] text-[#895BFF]"
                       }`}
                     >
-                      {isDeposit ? <ArrowUpOutlined /> : <ArrowDownOutlined />} 
+                      {isDeposit ? <ArrowDownOutlined /> : <ArrowUpOutlined />}
                     </div>
                     <div>
-                      <div className="text-[#111438]">
-                          {isDeposit ? "Gửi tiết kiệm" : "Rút tiết kiệm"}
+                      <div className="text-[14px] font-bold text-[#111438]">
+                        {isDeposit ? "Gửi tiết kiệm" : "Rút tiền"}
                       </div>
-                      <div className="text-xs text-gray-400">
-                        {dayjs(item.date).format("DD/MM/YYYY")}
+                      <div className="mt-0.5 text-[12px] font-medium text-gray-400">
+                        {dayjs(item.date).format("DD/MM/YYYY HH:mm")}
                       </div>
                     </div>
                   </div>
-                  <div
-                    className={`font-black ${
-                      isDeposit ? "text-[#22C55E]" : "text-[#EF4444]"
-                    }`}
-                  >
-                    {isDeposit ? "+" : "-"} {formatMoney(item?.amount)}
+                  <div className="text-right">
+                    <div
+                      className={`text-[15px] font-black ${
+                        isDeposit ? "text-[#10B981]" : "text-[#111438]"
+                      }`}
+                    >
+                      {isDeposit ? "+" : "-"}
+                      {formatMoney(item.amount)}
+                    </div>
+                    <div className="mt-0.5 text-[11px] font-medium text-gray-400">
+                      Số dư: {formatMoney(item.balanceAfter)}
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
+
+        <div className="relative mb-6 flex items-center overflow-hidden rounded-[24px] bg-gradient-to-r from-[#F0EEFF] to-[#E5E9FF] p-4 shadow-sm">
+          <div className="flex w-1/2 items-center justify-center">
+            <img
+              src={conlon}
+              alt="saving pig"
+              className="h-[130px] w-full object-contain"
+            />
+          </div>
+
+          <div className="relative z-10 flex w-1/2 flex-col items-start justify-center pl-3">
+            <div className="mb-1 text-[15px] font-black leading-snug text-[#111438]">
+              Tiết kiệm hôm nay, vững vàng tương lai
+            </div>
+
+            <div className="mb-4 text-[12px] font-medium leading-snug text-[#4B5563]">
+              Tương lai tài chính thảnh thơi, tự do hơn mỗi ngày!
+            </div>
+
+            <Button
+              type="primary"
+              className="h-9 rounded-xl border-none bg-[#895BFF] px-4 text-[12px] font-bold shadow-md hover:bg-[#7846E6]"
+              onClick={() => navigate("/savings/create")}
+            >
+              Gửi thêm ngay <RightOutlined className="ml-1 text-[10px]" />
+            </Button>
+          </div>
+        </div>
       </div>
+
       <SavingGoalModal
         open={goalModalOpen}
         currentUserId={currentUserId}
