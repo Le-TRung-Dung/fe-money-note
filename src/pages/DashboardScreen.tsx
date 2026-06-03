@@ -394,7 +394,6 @@ const DashboardScreen: React.FC = () => {
                   % tổng chi
                 </div>
               </div>
-              <RightOutlined className="text-gray-300 ml-2 text-sm" />
             </div>
           )}
 
@@ -431,7 +430,6 @@ const DashboardScreen: React.FC = () => {
                   % tổng chi
                 </div>
               </div>
-              <RightOutlined className="text-gray-300 ml-2 text-sm" />
             </div>
           )}
         </div>
@@ -453,50 +451,59 @@ const DashboardScreen: React.FC = () => {
                 Chưa có giao dịch nào
               </div>
             )}
-            {data.recentTransactions.slice(0, 3).map((tx: any) => {
-              const txDate = dayjs(tx.date).format("DD/MM/YYYY");
-              const isIncome = tx.type === "income";
+            {[...data.recentTransactions]
+              .sort((a: any, b: any) => {
+                const timeA = new Date(a.createdAt).getTime();
+                const timeB = new Date(b.createdAt).getTime();
 
-              return (
-                <div
-                  key={tx.id}
-                  onClick={() => navigate(`/transactions/${tx.id}/edit`)}
-                  className="flex cursor-pointer items-center justify-between rounded-2xl px-2 py-3 border-b border-gray-100 last:border-0 last:pb-3 hover:bg-[#F7F8FF] transition"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
-                      style={{
-                        backgroundColor: `${tx.category?.color || "#895BFF"}15`,
-                      }}
-                    >
-                      {tx.category?.icon || "✨"}
+                return timeB - timeA;
+              })
+              .slice(0, 3)
+              .map((tx: any) => {
+                const txDate = dayjs(tx.date).format("DD/MM/YYYY");
+                const isIncome = tx.type === "income";
+
+                return (
+                  <div
+                    key={tx.id}
+                    onClick={() => navigate(`/transactions/${tx.id}/edit`)}
+                    className="flex cursor-pointer items-center justify-between rounded-2xl px-2 py-3 border-b border-gray-100 last:border-0 last:pb-3 hover:bg-[#F7F8FF] transition"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
+                        style={{
+                          backgroundColor: `${tx.category?.color || "#895BFF"}15`,
+                        }}
+                      >
+                        {tx.category?.icon || "✨"}
+                      </div>
+
+                      <div>
+                        <div className="font-bold text-[#111438] text-[14px]">
+                          {tx.note || tx.category?.name || "Giao dịch"}
+                        </div>
+                        <div className="text-[12px] text-gray-400 mt-0.5">
+                          {tx.category?.name || "Không rõ nhóm"}
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <div className="font-bold text-[#111438] text-[14px]">
-                        {tx.note || tx.category?.name || "Giao dịch"}
+                    <div className="text-right">
+                      <div className="text-[12px] text-gray-400 mb-0.5">
+                        {txDate}
                       </div>
-                      <div className="text-[12px] text-gray-400 mt-0.5">
-                        {tx.category?.name || "Không rõ nhóm"}
+                      <div
+                        className="font-bold text-[14px]"
+                        style={{ color: isIncome ? "#22C55E" : "#EF4444" }}
+                      >
+                        {isIncome ? "+" : "-"}
+                        {formatMoney(tx.amount)}
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-[12px] text-gray-400 mb-0.5">
-                      {txDate}
-                    </div>
-                    <div
-                      className="font-bold text-[14px]"
-                      style={{ color: isIncome ? "#22C55E" : "#EF4444" }}
-                    >
-                      {isIncome ? "+" : "-"}
-                      {formatMoney(tx.amount)}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       </div>
