@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Badge,
   Button,
   DatePicker,
   Empty,
@@ -12,7 +11,6 @@ import {
   ArrowDownOutlined,
   ArrowLeftOutlined,
   ArrowUpOutlined,
-  BellOutlined,
   FilterOutlined,
   QuestionCircleOutlined,
   SearchOutlined,
@@ -30,18 +28,6 @@ import type {
 } from "../features/transactions/services/transactionListService";
 import { getTransactionListData } from "../features/transactions/services/transactionListService";
 import vi from '../assets/vi.png'
-
-const formatCompactMoney = (num: number) => {
-  if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(1).replace(".0", "")}M`;
-  }
-
-  if (num >= 1000) {
-    return `${(num / 1000).toFixed(0)}K`;
-  }
-
-  return num.toString();
-};
 
 const rangeOptions: { label: string; value: TransactionDateRange }[] = [
   { label: "Hôm nay", value: "today" },
@@ -95,9 +81,6 @@ function TransactionListScreen() {
     [],
   );
   const [categories, setCategories] = useState<Category[]>([]);
-  const [chartData, setChartData] = useState<
-    { date: string; dayLabel: string; amount: number }[]
-  >([]);
 
   const currentUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
 
@@ -130,7 +113,6 @@ function TransactionListScreen() {
       setWalletBalance(data.wallet?.balance || 0);
       setTransactions(data.transactions);
       setCategories(data.categories);
-      setChartData(data.dailyExpenseChartData);
     } catch (error) {
       message.error(
         error instanceof Error ? error.message : "Không thể tải giao dịch",
@@ -189,43 +171,6 @@ function TransactionListScreen() {
   const groupDates = Object.keys(groupedTransactions).sort((a, b) => {
     return new Date(b).getTime() - new Date(a).getTime();
   });
-
-  const currentListRangeLabel = useMemo(() => {
-    if (range === "customMonth") {
-      return `Tháng ${dayjs(`${selectedMonth}-01`).format("MM/YYYY")}`;
-    }
-    if (range === "customYear") {
-      return `Năm ${selectedYear}`;
-    }
-    return rangeOptions.find((opt) => opt.value === range)?.label || "30 ngày";
-  }, [range, selectedMonth, selectedYear]);
-
-  // -------------------------------------------------------------
-  // Xử lý dữ liệu động cho Chart (SVG Line Chart cố định theo tháng)
-  // -------------------------------------------------------------
-  const maxExpense = Math.max(...chartData.map((item) => item.amount), 0);
-
-  const points = useMemo(() => {
-    return chartData.map((item, i) => {
-      const x = chartData.length > 1 ? i * (300 / (chartData.length - 1)) : 150;
-      const y = maxExpense === 0 ? 80 : 80 - (item.amount / maxExpense) * 50;
-
-      return {
-        x,
-        y,
-        val: item.amount,
-        label: String(Number(item.dayLabel)),
-        tooltipLabel: `Ngày ${Number(item.dayLabel)}`,
-        isMax: item.amount === maxExpense && maxExpense > 0,
-      };
-    });
-  }, [chartData, maxExpense]);
-
-  const pathD = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x},${p.y}`)
-    .join(" ");
-
-  const maxPoint = points.find((p) => p.isMax);
 
   if (loading) {
     return (

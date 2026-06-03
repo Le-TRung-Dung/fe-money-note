@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Empty, Input, Skeleton, message } from "antd";
+import { Empty, Input, Spin, message } from "antd"; // Thay Skeleton bằng Spin
 import { ArrowLeftOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -79,7 +79,12 @@ function TransactionSearchScreen() {
             : "Nhập từ khóa để tìm giao dịch"}
         </div>
 
-        {loading && <Skeleton active paragraph={{ rows: 6 }} />}
+        {/* Hiển thị xoay xoay (Spinner) ở giữa khi đang loading */}
+        {loading && (
+          <div className="mt-20 flex justify-center">
+            <Spin size="large" />
+          </div>
+        )}
 
         {!loading && results.length === 0 && (
           <div className="mt-20">
