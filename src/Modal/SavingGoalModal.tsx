@@ -49,16 +49,6 @@ const iconOptions = [
   "🎁",
 ];
 
-const colorOptions = [
-  "#895BFF",
-  "#5B62FF",
-  "#22C55E",
-  "#F59E0B",
-  "#EF4444",
-  "#06B6D4",
-  "#EC4899",
-];
-
 function SavingGoalModal({
   open,
   currentUserId,

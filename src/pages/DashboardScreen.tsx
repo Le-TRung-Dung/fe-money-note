@@ -6,11 +6,6 @@ import {
   WalletFilled,
   ArrowUpOutlined,
   ArrowDownOutlined,
-  AppstoreFilled,
-  ProfileOutlined,
-  PlusOutlined,
-  PieChartOutlined,
-  UserOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -20,9 +15,6 @@ import { STORAGE_KEYS } from "../shared/constants/storageKeys";
 import { formatMoney } from "../shared/utils/formatMoney";
 import { getDashboardSummary } from "../features/dashboard/services/dashboardService";
 import logo from "../assets/logo.png";
-import { MdHome } from "react-icons/md";
-import { GrTransaction } from "react-icons/gr";
-import { GiPieChart } from "react-icons/gi";
 
 const formatCompactMoney = (num: number) => {
   if (num >= 1000000) return (num / 1000000).toFixed(1).replace(".0", "") + "M";

@@ -2,7 +2,6 @@ import { PlusOutlined, UserOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MdHome } from "react-icons/md";
 import { GrTransaction } from "react-icons/gr";
-import { GiPieChart } from "react-icons/gi";
 import { BsPiggyBank } from "react-icons/bs";
 
 function BottomNav() {

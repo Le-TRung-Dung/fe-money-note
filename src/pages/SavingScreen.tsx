@@ -8,12 +8,6 @@ import {
   QuestionCircleOutlined,
   EyeOutlined,
   RightOutlined,
-  PercentageOutlined,
-  GiftOutlined,
-  CalendarOutlined,
-  PieChartOutlined,
-  CalculatorOutlined,
-  LockOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import ketsat from "../assets/ket_sat_tien_nen_trong_suot.png";

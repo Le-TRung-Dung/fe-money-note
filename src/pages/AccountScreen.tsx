@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { Modal, Skeleton, message } from "antd";
 import {
-  BellOutlined,
   RightOutlined,
-  UserOutlined,
-  LockOutlined,
-  BgColorsOutlined,
-  CloudUploadOutlined,
-  QuestionCircleOutlined,
-  SwapOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
