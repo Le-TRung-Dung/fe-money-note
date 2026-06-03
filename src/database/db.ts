@@ -1,4 +1,4 @@
-import Dexie, { type Table } from 'dexie';
+import Dexie, { type Table } from "dexie";
 
 export type User = {
   id: string;
@@ -33,6 +33,24 @@ export type SavingTransaction = {
   note?: string;
   description?: string;
   date: string;
+
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SavingGoal = {
+  id: string;
+  userId: string;
+
+  name: string;
+  targetAmount: number;
+  description?: string;
+  deadline?: string;
+
+  icon?: string;
+  color?: string;
+
+  isCompleted: boolean;
 
   createdAt: string;
   updatedAt: string;
@@ -81,6 +99,7 @@ class MoneyNoteDatabase extends Dexie {
   categories!: Table<Category, string>;
   transactions!: Table<Transaction, string>;
   savingTransactions!: Table<SavingTransaction, string>;
+  savingGoals!: Table<SavingGoal, string>;
 
   constructor() {
     super("MoneyNoteDB");
@@ -104,6 +123,16 @@ class MoneyNoteDatabase extends Dexie {
       transactions:
         "id, userId, walletId, categoryId, type, debtType, date, createdAt",
       savingTransactions: "id, userId, walletId, type, date, createdAt",
+    });
+
+    this.version(4).stores({
+      users: "id, &username",
+      wallets: "id, userId, isDefault, type",
+      categories: "id, userId, type, name",
+      transactions:
+        "id, userId, walletId, categoryId, type, debtType, date, createdAt",
+      savingTransactions: "id, userId, walletId, type, date, createdAt",
+      savingGoals: "id, userId, targetAmount, deadline, createdAt",
     });
   }
 }
