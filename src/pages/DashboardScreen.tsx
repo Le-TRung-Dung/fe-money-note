@@ -123,7 +123,7 @@ const DashboardScreen: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#F7F9FF] pb-32 overflow-hidden font-sans">
+    <div className="relative min-h-screen bg-[#F7F9FF] overflow-hidden font-sans">
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#E0E7FF] rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 opacity-70 pointer-events-none" />
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#F3E8FF] rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3 opacity-70 pointer-events-none" />
@@ -497,63 +497,6 @@ const DashboardScreen: React.FC = () => {
                 </div>
               );
             })}
-          </div>
-        </div>
-        <div className="fixed bottom-0 left-0 w-full z-50 flex justify-center pointer-events-none">
-          <div className="w-full max-w-[760px] bg-white/95 backdrop-blur-md shadow-[0_-10px_40px_rgba(91,98,255,0.08)] rounded-t-[32px] pointer-events-auto flex items-end justify-between px-6 pb-3 border-t border-[#F7F9FF]">
-            {/* Tab: Tổng quan (Active) */}
-            <div
-              className="flex flex-col items-center gap-1.5 cursor-pointer w-[60px]"
-              onClick={() => navigate("/dashboard")}
-            >
-              <MdHome className="text-[22px] text-[#895BFF]" />
-              <span className="text-[10px] font-bold text-[#895BFF]">
-                Tổng quan
-              </span>
-            </div>
-
-            {/* Tab: Giao dịch */}
-            <div
-              className="flex flex-col items-center gap-1.5 cursor-pointer w-[60px]"
-              onClick={() => navigate("/transactions")}
-            >
-              <GrTransaction className="text-[22px] text-gray-400 hover:text-[#895BFF] transition-colors" />
-              <span className="text-[10px] font-medium text-gray-400">
-                Giao dịch
-              </span>
-            </div>
-
-            {/* Nút Thêm Giao Dịch (Center FAB) */}
-            <div className="relative flex flex-col items-center justify-center -translate-y-5">
-              <div
-                className="w-[56px] h-[56px] rounded-full bg-gradient-to-br from-[#895BFF] to-[#5B62FF] flex items-center justify-center shadow-[0_10px_25px_rgba(137,91,255,0.4)] cursor-pointer hover:scale-105 active:scale-95 transition-all"
-                onClick={() => navigate("/transactions/create")} // Sửa route theo code của bạn
-              >
-                <PlusOutlined className="text-white text-[24px]" />
-              </div>
-            </div>
-
-            {/* Tab: Ngân sách */}
-            <div
-              className="flex flex-col items-center gap-1.5 cursor-pointer w-[60px]"
-               onClick={() => navigate("/savings")}
-            >
-              <GiPieChart className="text-[22px] text-gray-400 hover:text-[#895BFF] transition-colors" />
-              <span className="text-[10px] font-medium text-gray-400">
-                Tiết kiệm
-              </span>
-            </div>
-
-            {/* Tab: Tài khoản */}
-            <div
-              className="flex flex-col items-center gap-1.5 cursor-pointer w-[60px]"
-              onClick={() => navigate("/account")}
-            >
-              <UserOutlined className="text-[22px] text-gray-400 hover:text-[#895BFF] transition-colors" />
-              <span className="text-[10px] font-medium text-gray-400">
-                Tài khoản
-              </span>
-            </div>
           </div>
         </div>
       </div>

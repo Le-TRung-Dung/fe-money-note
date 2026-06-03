@@ -87,3 +87,48 @@ export function getCurrentUserId() {
 export function isAuthenticated() {
   return Boolean(getCurrentUserId());
 }
+
+export async function resetPassword(payload: {
+  username: string;
+  newPassword: string;
+}) {
+  const username = payload.username.trim().toLowerCase();
+  const newPassword = payload.newPassword.trim();
+
+  if (!username) {
+    throw new Error("Vui lòng nhập tên đăng nhập");
+  }
+
+  if (!newPassword) {
+    throw new Error("Vui lòng nhập mật khẩu mới");
+  }
+
+  if (newPassword.length < 6) {
+    throw new Error("Mật khẩu mới phải có ít nhất 6 ký tự");
+  }
+
+  const user = await db.users.where("username").equals(username).first();
+
+  if (!user) {
+    throw new Error("Không tìm thấy tài khoản");
+  }
+
+  const newPasswordHash = await hashPassword(newPassword);
+
+  await db.users.update(user.id, {
+    passwordHash: newPasswordHash,
+    updatedAt: new Date().toISOString(),
+  });
+
+  return user;
+}
+
+export async function getCurrentUser() {
+  const currentUserId = getCurrentUserId();
+
+  if (!currentUserId) {
+    return null;
+  }
+
+  return db.users.get(currentUserId);
+}

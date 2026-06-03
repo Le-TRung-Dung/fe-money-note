@@ -164,11 +164,7 @@ const LoginPage: React.FC = () => {
                 <div className="-mt-2 mb-7 flex justify-end">
                   <button
                     type="button"
-                    onClick={() =>
-                      message.info(
-                        "Vì tài khoản lưu local nên quên mật khẩu sẽ xử lý sau bằng reset dữ liệu hoặc backup."
-                      )
-                    }
+                    onClick={() => navigate("/forgot-password")}
                     className="border-none bg-transparent p-0 text-[17px] font-bold text-[#3145FF] transition hover:text-[#1D28D9] cursor-pointer"
                   >
                     Quên mật khẩu?

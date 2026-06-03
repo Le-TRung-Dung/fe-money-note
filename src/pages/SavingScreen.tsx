@@ -150,7 +150,7 @@ function SavingScreen() {
   const isDecreaseTrend = monthlyReport?.trend === "decrease";
 
   return (
-    <div className="min-h-screen bg-[#F7F9FF] px-4 py-6 pb-28 font-sans">
+    <div className="min-h-screen bg-[#F7F9FF] px-4 py-6 font-sans">
       <div className="mx-auto max-w-[760px]">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
@@ -384,7 +384,7 @@ function SavingScreen() {
                           : "bg-[#F4F1FF] text-[#895BFF]"
                       }`}
                     >
-                      {isDeposit ? <ArrowDownOutlined /> : <ArrowUpOutlined />}
+                      {isDeposit ? < ArrowUpOutlined /> : <ArrowDownOutlined />}
                     </div>
                     <div>
                       <div className="text-[14px] font-bold text-[#111438]">
