@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 // Thông thường trên ReactJS chúng ta dùng react-router-dom để điều hướng thay cho @react-navigation
 import { useNavigate } from "react-router-dom";
 import { Button, message } from "antd";
