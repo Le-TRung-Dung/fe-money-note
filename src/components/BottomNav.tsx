@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { MdHome } from "react-icons/md";
 import { GrTransaction } from "react-icons/gr";
 import { GiPieChart } from "react-icons/gi";
+import { BsPiggyBank } from "react-icons/bs";
 
 function BottomNav() {
   const navigate = useNavigate();
@@ -74,7 +75,7 @@ function BottomNav() {
           className="flex w-[60px] cursor-pointer flex-col items-center gap-1.5"
           onClick={() => navigate("/savings")}
         >
-          <GiPieChart
+          <BsPiggyBank
             className={`text-[22px] transition-colors ${
               isActive("/savings") ? "text-[#895BFF]" : "text-gray-400"
             }`}

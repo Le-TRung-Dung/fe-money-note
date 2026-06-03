@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  message,
-  Skeleton,
-} from "antd";
+import { message, Skeleton } from "antd";
 import {
   BellOutlined,
   RightOutlined,
@@ -135,7 +132,10 @@ const DashboardScreen: React.FC = () => {
       <div className="relative z-10 px-5 pt-12 max-w-[760px] mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <div onClick={() => navigate("/landing")} className="flex items-center gap-2" >
+          <div
+            onClick={() => navigate("/landing")}
+            className="flex items-center gap-2"
+          >
             <img src={logo} className="h-[59px]" />
           </div>
           <div className="relative">
@@ -453,8 +453,7 @@ const DashboardScreen: React.FC = () => {
                 Chưa có giao dịch nào
               </div>
             )}
-
-            {data.recentTransactions.map((tx:any) => {
+            {data.recentTransactions.slice(0, 3).map((tx: any) => {
               const txDate = dayjs(tx.date).format("DD/MM/YYYY");
               const isIncome = tx.type === "income";
 
@@ -467,10 +466,13 @@ const DashboardScreen: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
-                      style={{ backgroundColor: `${tx.category?.color || "#895BFF"}15` }}
+                      style={{
+                        backgroundColor: `${tx.category?.color || "#895BFF"}15`,
+                      }}
                     >
                       {tx.category?.icon || "✨"}
                     </div>
+
                     <div>
                       <div className="font-bold text-[#111438] text-[14px]">
                         {tx.note || tx.category?.name || "Giao dịch"}

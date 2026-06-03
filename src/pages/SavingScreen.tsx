@@ -367,9 +367,8 @@ function SavingScreen() {
           )}
 
           <div className="flex flex-col gap-3 rounded-[24px] bg-white p-3 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-            {mappedTransactions.map((item) => {
+            {mappedTransactions.slice(0, 3).map((item) => {
               const isDeposit = item.type === "deposit";
-
               return (
                 <div
                   key={item.id}
@@ -384,7 +383,7 @@ function SavingScreen() {
                           : "bg-[#F4F1FF] text-[#895BFF]"
                       }`}
                     >
-                      {isDeposit ? < ArrowUpOutlined /> : <ArrowDownOutlined />}
+                      {isDeposit ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
                     </div>
                     <div>
                       <div className="text-[14px] font-bold text-[#111438]">

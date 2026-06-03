@@ -12,38 +12,43 @@ import SavingCreateScreen from "./pages/SavingCreateScreen";
 import ForgotPasswordScreen from "./pages/ForgotPasswordScreen";
 import AccountScreen from "./pages/AccountScreen";
 import AppShell from "./components/AppShell";
+import SplashScreen from "./pages/SplashScreen";
+import ScrollToTop from "./components/ScrollToTop";
 
 const App: React.FC = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/landing" replace />} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<SplashScreen />} />
 
-      <Route path="/about" element={<About />} />
-      <Route path="/landing" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
-      <Route
-        path="/transactions/create"
-        element={<TransactionCreateScreen />}
-      />
-      <Route
-        path="/transactions/:id/edit"
-        element={<TransactionCreateScreen />}
-      />
+        <Route path="/about" element={<About />} />
+        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
+        <Route
+          path="/transactions/create"
+          element={<TransactionCreateScreen />}
+        />
+        <Route
+          path="/transactions/:id/edit"
+          element={<TransactionCreateScreen />}
+        />
 
-      <Route element={<AppShell />}>
-        <Route path="/dashboard" element={<DashboardScreen />} />
+        <Route element={<AppShell />}>
+          <Route path="/dashboard" element={<DashboardScreen />} />
 
-        <Route path="/savings" element={<SavingScreen />} />
-        <Route path="/savings/create" element={<SavingCreateScreen />} />
-        <Route path="/savings/:id/edit" element={<SavingCreateScreen />} />
+          <Route path="/savings" element={<SavingScreen />} />
+          <Route path="/savings/create" element={<SavingCreateScreen />} />
+          <Route path="/savings/:id/edit" element={<SavingCreateScreen />} />
 
-        <Route path="/account" element={<AccountScreen />} />
-      </Route>
+          <Route path="/account" element={<AccountScreen />} />
+        </Route>
 
-      <Route path="*" element={<h2>404 - Không tìm thấy trang</h2>} />
-    </Routes>
+        <Route path="*" element={<h2>404 - Không tìm thấy trang</h2>} />
+      </Routes>
+    </>
   );
 };
 
