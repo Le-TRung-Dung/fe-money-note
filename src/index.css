@@ -2,30 +2,3 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
-#root {
-  width: 100%;
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
-  background: #f7f9ff;
-}
-
-html {
-  overscroll-behavior-y: none;
-}
-
-body {
-  overflow-x: hidden;
-}
-
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.app-scroll {
-  overscroll-behavior-y: contain;
-  -webkit-overflow-scrolling: touch;
-}
