@@ -1,12 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Button,
-  DatePicker,
-  Empty,
-  Modal,
-  Skeleton,
-  message,
-} from "antd";
+import { Button, DatePicker, Empty, Modal, Skeleton, message } from "antd";
 import {
   ArrowDownOutlined,
   ArrowLeftOutlined,
@@ -27,7 +20,7 @@ import type {
   TransactionWithCategory,
 } from "../features/transactions/services/transactionListService";
 import { getTransactionListData } from "../features/transactions/services/transactionListService";
-import vi from '../assets/vi.png'
+import vi from "../assets/vi.png";
 
 const rangeOptions: { label: string; value: TransactionDateRange }[] = [
   { label: "Hôm nay", value: "today" },
@@ -67,8 +60,7 @@ function TransactionListScreen() {
   const [draftRange, setDraftRange] =
     useState<TransactionDateRange>("last30days");
   const [draftType, setDraftType] = useState<TransactionType | "all">("all");
-  const [draftCategoryId, setDraftCategoryId] =
-    useState<string | "all">("all");
+  const [draftCategoryId, setDraftCategoryId] = useState<string | "all">("all");
   const [draftSelectedMonth, setDraftSelectedMonth] = useState(
     dayjs().format("YYYY-MM"),
   );
@@ -254,7 +246,7 @@ function TransactionListScreen() {
               return (
                 <div
                   key={date}
-                  className="rounded-[24px] bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)]"
+                  className="rounded-[24px] bg-white p-3 shadow-[0_4px_20px_rgba(0,0,0,0.02)]"
                 >
                   <div className="mb-4 flex items-center justify-between border-b border-gray-50 pb-3">
                     <div className="flex items-center gap-3">
@@ -489,20 +481,12 @@ function TransactionItem({
 
         <div className="truncate">
           <div className="truncate text-[15px] font-bold text-[#111438]">
-            {tx.note || tx.category?.name || "Giao dịch"}
-          </div>
-
-          <div className="mt-0.5 truncate text-[13px] font-medium text-gray-500">
             {tx.category?.name || "Không rõ nhóm"}
           </div>
         </div>
       </div>
 
       <div className="flex w-[30%] items-center justify-end gap-3">
-        <div className="text-[13px] font-medium text-gray-400">
-          {dayjs(tx.createdAt).format("HH:mm")}
-        </div>
-
         <div
           className="whitespace-nowrap text-[15px] font-black"
           style={{ color }}

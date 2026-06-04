@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   Card,
@@ -68,15 +68,17 @@ const debtTypeOptions = [
 
 function TransactionCreateScreen() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [form] = Form.useForm<FormValues>();
+
+  const pageRef = useRef<HTMLDivElement | null>(null);
+
+  const isEditMode = Boolean(id);
+  const currentUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
 
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
-
-  const { id } = useParams();
-  const isEditMode = Boolean(id);
-
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -86,14 +88,16 @@ function TransactionCreateScreen() {
 
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 
-  const currentUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
+  const [mobilePopupOpen, setMobilePopupOpen] = useState(false);
+
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const categoryOptions = useMemo(() => {
     return categories.map((item) => ({
       label: (
         <div className="flex items-center gap-3">
           <span
-            className="flex h-9 w-9 items-center justify-center rounded-full text-lg"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg"
             style={{ background: `${item.color || "#6366f1"}18` }}
           >
             {item.icon || "✨"}
@@ -105,6 +109,106 @@ function TransactionCreateScreen() {
       searchLabel: item.name,
     }));
   }, [categories]);
+
+  useEffect(() => {
+    if (!mobilePopupOpen) return;
+
+    const scrollY = window.scrollY;
+
+    const originalPosition = document.body.style.position;
+    const originalTop = document.body.style.top;
+    const originalWidth = document.body.style.width;
+    const originalOverflow = document.body.style.overflow;
+
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.position = originalPosition;
+      document.body.style.top = originalTop;
+      document.body.style.width = originalWidth;
+      document.body.style.overflow = originalOverflow;
+
+      window.scrollTo(0, scrollY);
+    };
+  }, [mobilePopupOpen]);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+
+    const getKeyboardHeight = () => {
+      if (!viewport) return 0;
+
+      const height = window.innerHeight - viewport.height - viewport.offsetTop;
+      return height > 80 ? height : 0;
+    };
+
+    const isEditableElement = (element: HTMLElement | null) => {
+      if (!element) return false;
+
+      return (
+        element.tagName === "INPUT" ||
+        element.tagName === "TEXTAREA" ||
+        Boolean(element.closest(".ant-input-number")) ||
+        Boolean(element.closest(".ant-picker")) ||
+        Boolean(element.closest(".ant-select"))
+      );
+    };
+
+    const scrollFocusedInputIntoView = () => {
+      const activeElement = document.activeElement as HTMLElement | null;
+
+      if (!isEditableElement(activeElement)) return;
+
+      setTimeout(() => {
+        activeElement?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest",
+        });
+      }, 120);
+    };
+
+    const handleViewportChange = () => {
+      const nextKeyboardHeight = getKeyboardHeight();
+
+      setKeyboardHeight(nextKeyboardHeight);
+
+      if (nextKeyboardHeight > 0) {
+        scrollFocusedInputIntoView();
+      }
+    };
+
+    const handleFocusIn = () => {
+      setTimeout(() => {
+        handleViewportChange();
+        scrollFocusedInputIntoView();
+      }, 250);
+    };
+
+    const handleFocusOut = () => {
+      setTimeout(() => {
+        const nextKeyboardHeight = getKeyboardHeight();
+        setKeyboardHeight(nextKeyboardHeight);
+      }, 150);
+    };
+
+    viewport?.addEventListener("resize", handleViewportChange);
+    viewport?.addEventListener("scroll", handleViewportChange);
+
+    window.addEventListener("focusin", handleFocusIn);
+    window.addEventListener("focusout", handleFocusOut);
+
+    return () => {
+      viewport?.removeEventListener("resize", handleViewportChange);
+      viewport?.removeEventListener("scroll", handleViewportChange);
+
+      window.removeEventListener("focusin", handleFocusIn);
+      window.removeEventListener("focusout", handleFocusOut);
+    };
+  }, []);
 
   useEffect(() => {
     const initPage = async () => {
@@ -185,10 +289,15 @@ function TransactionCreateScreen() {
     initPage();
   }, [currentUserId, form, navigate, id, isEditMode]);
 
+  const getMobilePopupContainer = (triggerNode: HTMLElement) => {
+    return triggerNode.parentElement || document.body;
+  };
+
   const handleTypeChange = async (value: TransactionType) => {
     if (!currentUserId) return;
 
     setTransactionType(value);
+
     form.setFieldsValue({
       type: value,
       categoryId: undefined as unknown as string,
@@ -201,10 +310,12 @@ function TransactionCreateScreen() {
 
   const handleCategorySuccess = async (newCategory: Category) => {
     if (!currentUserId) return;
+
     const nextCategories = await getCategoriesByType(
       currentUserId,
       transactionType,
     );
+
     setCategories(nextCategories);
     form.setFieldsValue({ categoryId: newCategory.id });
   };
@@ -271,14 +382,6 @@ function TransactionCreateScreen() {
     }
   };
 
-  if (pageLoading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Text>Đang tải dữ liệu...</Text>
-      </div>
-    );
-  }
-
   const handleDelete = async () => {
     try {
       if (!id) return;
@@ -298,48 +401,65 @@ function TransactionCreateScreen() {
     }
   };
 
+  if (pageLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Text>Đang tải dữ liệu...</Text>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative min-h-screen bg-[#F7F8FF] px-5 py-6 overflow-hidden">
+    <div
+      ref={pageRef}
+      className="transaction-mobile-page relative min-h-screen bg-[#F7F8FF] px-3 py-4 overflow-x-hidden"
+      style={{
+        paddingBottom: keyboardHeight > 0 ? keyboardHeight + 32 : 24,
+      }}
+    >
       <div className="absolute top-0 left-0 w-64 h-64 bg-[#E0E7FF] rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2 opacity-60 pointer-events-none" />
       <div className="absolute top-20 right-0 w-80 h-80 bg-[#F3E8FF] rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3 opacity-60 pointer-events-none" />
 
       <div className="absolute top-24 left-16 text-[#B4B8FF] text-2xl pointer-events-none">
         ✦
       </div>
+
       <div className="absolute top-32 right-12 text-[#B4B8FF] text-xl pointer-events-none">
         ✦
       </div>
-      <div className="absolute top-40 right-20 grid grid-cols-3 gap-2 pointer-events-none">
-        {[...Array(9)].map((_, i) => (
-          <div key={i} className="w-1 h-1 bg-[#D4D7FF] rounded-full" />
-        ))}
-      </div>
 
-      <div className="relative mx-auto max-w-[760px] z-10">
-        <div className="mb-4 flex items-center justify-between gap-4">
+      <div className="relative mx-auto max-w-[480px] z-10">
+        <div className="mb-4 flex items-center justify-between gap-2">
           <Button
             type="text"
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate("/dashboard")}
-            className="text-gray-600 hover:text-gray-900 bg-white/50"
+            className="mobile-back-button"
           >
             Quay lại
           </Button>
-          <div className="text-right bg-white/60 px-3 py-1 rounded-xl backdrop-blur-sm shadow-sm">
-            <div className="text-sm text-[#111438]">
+
+          <div className="max-w-[58%] text-right bg-white/70 px-3 py-1.5 rounded-xl backdrop-blur-sm shadow-sm">
+            <div className="text-[12px] font-semibold text-[#111438] truncate">
               {wallet?.name}: {formatMoney(wallet?.balance || 0)}
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col items-center mb-3">
+        <div className="flex flex-col items-center mb-4 text-center">
           <Title
-            level={2}
-            style={{ marginBottom: 4, color: "#111438", fontWeight: 800 }}
+            level={3}
+            style={{
+              marginBottom: 4,
+              color: "#111438",
+              fontWeight: 800,
+              fontSize: 24,
+            }}
           >
             {isEditMode ? "Sửa giao dịch" : "Thêm giao dịch"}
           </Title>
-          <Text type="secondary" className="text-[15px]">
+
+          <Text type="secondary" className="text-[14px] leading-5">
             {isEditMode
               ? "Cập nhật thông tin giao dịch của bạn"
               : "Ghi lại khoản chi, thu nhập hoặc vay nợ"}
@@ -347,9 +467,9 @@ function TransactionCreateScreen() {
         </div>
 
         <Card
-          className="custom-card border-none shadow-[0_20px_50px_rgba(91,98,255,0.08)] bg-white/90 backdrop-blur-md"
-          style={{ borderRadius: 28 }}
-          bodyStyle={{ padding: "16px 16px" }}
+          className="custom-card border-none shadow-[0_16px_40px_rgba(91,98,255,0.08)] bg-white/95 backdrop-blur-md"
+          style={{ borderRadius: 24 }}
+          bodyStyle={{ padding: "14px 12px" }}
         >
           <Form<FormValues>
             form={form}
@@ -362,37 +482,42 @@ function TransactionCreateScreen() {
               date: dayjs(),
             }}
           >
-            <Form.Item name="type" className="mb-2">
-              <div className="flex p-[6px] rounded-[20px] bg-[#F7F8FF] shadow-inner gap-2">
+            <Form.Item name="type" className="mb-3">
+              <div className="grid grid-cols-3 p-[5px] rounded-[18px] bg-[#F7F8FF] shadow-inner gap-1.5">
                 <div
                   onClick={() => handleTypeChange("expense")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[16px] cursor-pointer font-semibold transition-all duration-300 ${
+                  className={`mobile-type-tab ${
                     transactionType === "expense"
                       ? "bg-[#5B62FF] text-white shadow-md"
-                      : "text-[#5B62FF] hover:bg-white/50"
+                      : "text-[#5B62FF]"
                   }`}
                 >
-                  <WalletOutlined /> Khoản chi
+                  <WalletOutlined />
+                  <span>Chi</span>
                 </div>
+
                 <div
                   onClick={() => handleTypeChange("income")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[16px] cursor-pointer font-semibold transition-all duration-300 ${
+                  className={`mobile-type-tab ${
                     transactionType === "income"
                       ? "bg-[#22C55E] text-white shadow-md"
-                      : "text-[#22C55E] hover:bg-white/50"
+                      : "text-[#22C55E]"
                   }`}
                 >
-                  <ArrowUpOutlined /> Khoản thu
+                  <ArrowUpOutlined />
+                  <span>Thu</span>
                 </div>
+
                 <div
                   onClick={() => handleTypeChange("debt")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[16px] cursor-pointer font-semibold transition-all duration-300 ${
+                  className={`mobile-type-tab ${
                     transactionType === "debt"
                       ? "bg-[#895BFF] text-white shadow-md"
-                      : "text-[#895BFF] hover:bg-white/50"
+                      : "text-[#895BFF]"
                   }`}
                 >
-                  <SwapOutlined /> Vay nợ
+                  <SwapOutlined />
+                  <span>Vay nợ</span>
                 </div>
               </div>
             </Form.Item>
@@ -410,6 +535,16 @@ function TransactionCreateScreen() {
                   placeholder="Chọn loại vay nợ"
                   options={debtTypeOptions}
                   className="custom-select"
+                  getPopupContainer={getMobilePopupContainer}
+                  onOpenChange={setMobilePopupOpen}
+                  dropdownStyle={{
+                    maxHeight: 280,
+                    overflowY: "auto",
+                    WebkitOverflowScrolling: "touch",
+                    overscrollBehavior: "contain",
+                  }}
+                  listHeight={260}
+                  virtual={false}
                 />
               </Form.Item>
             )}
@@ -422,10 +557,12 @@ function TransactionCreateScreen() {
                 { required: true, message: "Vui lòng nhập số tiền" },
                 {
                   validator: (_, value) => {
-                    if (!value || value <= 0)
+                    if (!value || value <= 0) {
                       return Promise.reject(
                         new Error("Số tiền phải lớn hơn 0"),
                       );
+                    }
+
                     return Promise.resolve();
                   },
                 },
@@ -436,6 +573,7 @@ function TransactionCreateScreen() {
                 min={0}
                 placeholder="0 đ"
                 controls={false}
+                inputMode="numeric"
                 formatter={(value) =>
                   `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
                 }
@@ -444,9 +582,10 @@ function TransactionCreateScreen() {
             </Form.Item>
 
             <div className="relative">
-              <div className="absolute left-3 top-[29px] z-10 w-9 h-9 rounded-full bg-[#F3F4FF] text-[#5B62FF] flex items-center justify-center">
+              <div className="mobile-field-icon absolute left-3 top-[31px] z-10">
                 <ShoppingCartOutlined className="text-lg" />
               </div>
+
               <Form.Item
                 name="categoryId"
                 label={
@@ -464,19 +603,35 @@ function TransactionCreateScreen() {
                   options={categoryOptions}
                   showSearch
                   optionFilterProp="searchLabel"
+                  className="custom-select-with-icon"
+                  getPopupContainer={getMobilePopupContainer}
+                  onOpenChange={setMobilePopupOpen}
+                  dropdownStyle={{
+                    maxHeight: 320,
+                    overflowY: "auto",
+                    WebkitOverflowScrolling: "touch",
+                    overscrollBehavior: "contain",
+                  }}
+                  listHeight={260}
+                  virtual={false}
                   dropdownRender={(menu) => (
-                    <>
+                    <div className="mobile-select-dropdown">
                       {menu}
-                      <div className="border-t border-[#EEF0FF] p-3">
+
+                      <div className="mobile-add-category-box">
                         <Button
                           type="dashed"
                           block
-                          onClick={() => setCategoryModalOpen(true)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setMobilePopupOpen(false);
+                            setCategoryModalOpen(true);
+                          }}
                         >
                           + Thêm nhóm mới
                         </Button>
                       </div>
-                    </>
+                    </div>
                   )}
                 />
               </Form.Item>
@@ -484,7 +639,7 @@ function TransactionCreateScreen() {
 
             <Form.Item name="note" label="Ghi chú" className="custom-form-item">
               <TextArea
-                placeholder="Nhập ghi chú (không bắt buộc)"
+                placeholder="Nhập ghi chú nếu cần"
                 className="custom-textarea"
                 maxLength={200}
                 showCount
@@ -493,9 +648,10 @@ function TransactionCreateScreen() {
             </Form.Item>
 
             <div className="relative">
-              <div className="absolute left-3 top-[38px] z-10 w-9 h-9 rounded-full bg-[#F3F4FF] text-[#5B62FF] flex items-center justify-center">
+              <div className="mobile-field-icon absolute left-3 top-[31px] z-10">
                 <CalendarOutlined className="text-lg" />
               </div>
+
               <Form.Item
                 name="date"
                 label="Thứ, ngày tháng"
@@ -508,15 +664,20 @@ function TransactionCreateScreen() {
                   className="w-full custom-datepicker-with-icon"
                   format="DD/MM/YYYY"
                   placeholder="Chọn ngày"
+                  inputReadOnly
+                  placement="bottomLeft"
+                  getPopupContainer={getMobilePopupContainer}
+                  onOpenChange={setMobilePopupOpen}
                   suffixIcon={<RightOutlined className="text-gray-400" />}
                 />
               </Form.Item>
             </div>
 
             <div className="flex items-center justify-center my-4 relative">
-              <div className="absolute w-full h-[1px] bg-gray-100 left-0 top-1/2 -translate-y-1/2"></div>
+              <div className="absolute w-full h-[1px] bg-gray-100 left-0 top-1/2 -translate-y-1/2" />
+
               <div
-                className="bg-white px-4 z-10 text-[#5B62FF] font-medium cursor-pointer flex items-center gap-2 hover:text-[#3453FF] transition-colors"
+                className="bg-white px-4 z-10 text-[#5B62FF] font-semibold cursor-pointer flex items-center gap-2 text-[14px] active:opacity-70"
                 onClick={() => setShowDetails(!showDetails)}
               >
                 {showDetails ? (
@@ -531,16 +692,17 @@ function TransactionCreateScreen() {
             {showDetails && (
               <div className="animate-fade-in">
                 <div className="relative">
-                  <div className="absolute left-3 top-[38px] z-10 w-9 h-9 rounded-full bg-[#F3F4FF] text-[#5B62FF] flex items-center justify-center">
+                  <div className="mobile-field-icon absolute left-3 top-[31px] z-10">
                     <TeamOutlined className="text-lg" />
                   </div>
+
                   <Form.Item
                     name="partner"
                     label="Tiêu với ai"
                     className="custom-form-item"
                   >
                     <Input
-                      placeholder="Nhập tên hoặc chọn người"
+                      placeholder="Nhập tên nếu cần"
                       className="custom-input-with-icon"
                       suffix={<RightOutlined className="text-gray-400" />}
                     />
@@ -553,10 +715,10 @@ function TransactionCreateScreen() {
                   className="custom-form-item"
                 >
                   <TextArea
-                    rows={3}
                     placeholder="Mô tả chi tiết hơn nếu cần"
                     maxLength={300}
                     showCount
+                    autoSize={{ minRows: 3, maxRows: 5 }}
                     className="custom-textarea"
                   />
                 </Form.Item>
@@ -587,12 +749,7 @@ function TransactionCreateScreen() {
                     danger
                     block
                     loading={deleteLoading}
-                    className="mt-3"
-                    style={{
-                      height: 40,
-                      borderRadius: 16,
-                      fontWeight: 700,
-                    }}
+                    className="mt-3 mobile-delete-button"
                   >
                     Xóa giao dịch
                   </Button>
@@ -604,99 +761,323 @@ function TransactionCreateScreen() {
       </div>
 
       <style>{`
-        /* Giảm margin bottom mặc định của Antd từ 24px xuống 14px để thu hẹp khoảng cách */
+        .transaction-mobile-page {
+          min-height: 100dvh;
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior-x: none;
+          scroll-padding-bottom: 180px;
+        }
+
+        .transaction-mobile-page input,
+        .transaction-mobile-page textarea {
+          scroll-margin-bottom: 180px;
+          scroll-margin-top: 80px;
+        }
+
+        @supports (height: 100dvh) {
+          .transaction-mobile-page {
+            min-height: 100dvh;
+          }
+        }
+
+        .mobile-back-button {
+          height: 36px !important;
+          border-radius: 999px !important;
+          background: rgba(255, 255, 255, 0.7) !important;
+          color: #4B5563 !important;
+          font-weight: 600 !important;
+          padding-inline: 12px !important;
+        }
+
+        .mobile-type-tab {
+          min-height: 42px;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
+          transition: transform 0.15s ease, background 0.2s ease, color 0.2s ease;
+        }
+
+        .mobile-type-tab:active {
+          transform: scale(0.97);
+        }
+
         .custom-form-item {
-          margin-bottom: 14px !important;
+          margin-bottom: 13px !important;
+        }
+
+        .custom-form-item .ant-form-item-label {
+          padding-bottom: 5px !important;
         }
 
         .custom-form-item .ant-form-item-label > label {
-          font-weight: 600 !important;
+          font-weight: 700 !important;
           color: #111438 !important;
-          font-size: 14px;
+          font-size: 13px !important;
+        }
+
+        .custom-input-number.ant-input-number {
+          height: 50px !important;
+          border-radius: 15px !important;
+          border: 1px solid #E5E7EB !important;
+          overflow: hidden;
         }
 
         .custom-input-number .ant-input-number-input {
-          height: 52px !important;
-          font-size: 22px !important;
-          font-weight: 600 !important;
-          color: #895BFF;
-          padding-left: 16px;
-        }
-        .custom-input-number.ant-input-number {
-          border-radius: 14px !important;
-          border: 1px solid #E5E7EB !important;
-        }
-        .custom-input-number.ant-input-number-focused {
-          border-color: #5B62FF !important;
-          box-shadow: 0 0 0 2px rgba(91,98,255,0.1) !important;
+          height: 50px !important;
+          font-size: 21px !important;
+          font-weight: 700 !important;
+          color: #895BFF !important;
+          padding-left: 15px !important;
         }
 
-        .custom-textarea {
-          border-radius: 14px !important;
-          border: 1px solid #E5E7EB !important;
-          padding: 12px 16px !important;
-          font-size: 15px;
+        .custom-input-number.ant-input-number-focused {
+          border-color: #5B62FF !important;
+          box-shadow: 0 0 0 2px rgba(91, 98, 255, 0.1) !important;
         }
-        
+
+        .custom-select .ant-select-selector,
         .custom-select-with-icon .ant-select-selector {
-          height: 52px !important;
-          border-radius: 14px !important;
+          height: 50px !important;
+          border-radius: 15px !important;
           border: 1px solid #E5E7EB !important;
-          padding-left: 56px !important;
-          display: flex;
-          align-items: center;
-          font-size: 15px;
+          display: flex !important;
+          align-items: center !important;
+          font-size: 15px !important;
+          box-shadow: none !important;
         }
+
+        .custom-select-with-icon .ant-select-selector {
+          padding-left: 52px !important;
+        }
+
+        .custom-select.ant-select-focused .ant-select-selector,
         .custom-select-with-icon.ant-select-focused .ant-select-selector {
           border-color: #5B62FF !important;
-          box-shadow: 0 0 0 2px rgba(91,98,255,0.1) !important;
+          box-shadow: 0 0 0 2px rgba(91, 98, 255, 0.1) !important;
+        }
+
+        .custom-select .ant-select-selection-item,
+        .custom-select-with-icon .ant-select-selection-item {
+          display: flex !important;
+          align-items: center !important;
+          line-height: 1.2 !important;
+          font-weight: 600 !important;
+        }
+
+        .custom-select .ant-select-selection-placeholder,
+        .custom-select-with-icon .ant-select-selection-placeholder {
+          color: #9CA3AF !important;
+          font-size: 15px !important;
         }
 
         .custom-datepicker-with-icon {
-          height: 52px !important;
-          border-radius: 14px !important;
+          height: 50px !important;
+          border-radius: 15px !important;
           border: 1px solid #E5E7EB !important;
-          padding-left: 56px !important;
-          font-size: 15px;
+          padding-left: 52px !important;
+          font-size: 15px !important;
+          box-shadow: none !important;
+        }
+
+        .custom-datepicker-with-icon.ant-picker-focused {
+          border-color: #5B62FF !important;
+          box-shadow: 0 0 0 2px rgba(91, 98, 255, 0.1) !important;
+        }
+
+        .custom-datepicker-with-icon input {
+          font-size: 15px !important;
+          font-weight: 600 !important;
         }
 
         .custom-input-with-icon {
-          height: 52px !important;
-          border-radius: 14px !important;
+          height: 50px !important;
+          border-radius: 15px !important;
           border: 1px solid #E5E7EB !important;
-          padding-left: 56px !important;
-          font-size: 15px;
+          padding-left: 52px !important;
+          font-size: 15px !important;
+          box-shadow: none !important;
         }
 
-        .custom-select .ant-select-selector {
-          height: 52px !important;
-          border-radius: 14px !important;
+        .custom-input-with-icon:focus,
+        .custom-input-with-icon:hover {
+          border-color: #5B62FF !important;
+          box-shadow: 0 0 0 2px rgba(91, 98, 255, 0.1) !important;
+        }
+
+        .custom-textarea {
+          border-radius: 15px !important;
           border: 1px solid #E5E7EB !important;
+          padding: 12px 14px !important;
+          font-size: 15px !important;
+          box-shadow: none !important;
+        }
+
+        .custom-textarea:focus,
+        .custom-textarea:hover {
+          border-color: #5B62FF !important;
+          box-shadow: 0 0 0 2px rgba(91, 98, 255, 0.1) !important;
+        }
+
+        .mobile-field-icon {
+          width: 34px;
+          height: 34px;
+          border-radius: 999px;
+          background: #F3F4FF;
+          color: #5B62FF;
           display: flex;
           align-items: center;
+          justify-content: center;
+          pointer-events: none;
         }
 
         .money-save-button {
-          height: 40px !important;
+          height: 46px !important;
           border-radius: 16px !important;
-          font-size: 18px !important;
-          font-weight: 700 !important;
+          font-size: 17px !important;
+          font-weight: 800 !important;
           background: linear-gradient(90deg, #6C5CE7 0%, #3453FF 100%) !important;
           border: none !important;
-          box-shadow: 0 8px 20px rgba(91,98,255,0.2) !important;
-          transition: transform 0.2s, box-shadow 0.2s !important;
+          box-shadow: 0 8px 20px rgba(91, 98, 255, 0.22) !important;
         }
-        .money-save-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 25px rgba(91,98,255,0.3) !important;
+
+        .money-save-button:active {
+          transform: scale(0.98);
         }
-        
+
+        .mobile-delete-button {
+          height: 44px !important;
+          border-radius: 16px !important;
+          font-weight: 700 !important;
+        }
+
         .animate-fade-in {
-          animation: fadeIn 0.3s ease-in-out;
+          animation: fadeIn 0.22s ease-in-out;
         }
+
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-5px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(-4px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Fix chính cho Select mobile */
+        .mobile-select-dropdown,
+        .ant-select-dropdown {
+          overscroll-behavior: contain !important;
+          -webkit-overflow-scrolling: touch !important;
+          touch-action: pan-y !important;
+          border-radius: 18px !important;
+          overflow: hidden !important;
+          box-shadow: 0 16px 40px rgba(17, 20, 56, 0.14) !important;
+        }
+
+        .ant-select-dropdown {
+          max-height: 340px !important;
+        }
+
+        .ant-select-dropdown .rc-virtual-list,
+        .ant-select-dropdown .rc-virtual-list-holder {
+          max-height: 260px !important;
+          overscroll-behavior: contain !important;
+          -webkit-overflow-scrolling: touch !important;
+        }
+
+        .ant-select-dropdown .ant-select-item {
+          min-height: 46px !important;
+          display: flex !important;
+          align-items: center !important;
+          padding: 8px 12px !important;
+          font-size: 15px !important;
+        }
+
+        .ant-select-dropdown .ant-select-item-option-selected {
+          background: #F3F4FF !important;
+          font-weight: 700 !important;
+        }
+
+        .ant-select-dropdown .ant-select-item-option-active {
+          background: #F7F8FF !important;
+        }
+
+        .mobile-add-category-box {
+          position: sticky;
+          bottom: 0;
+          background: #fff;
+          border-top: 1px solid #EEF0FF;
+          padding: 10px 12px;
+          z-index: 2;
+        }
+
+        .mobile-add-category-box .ant-btn {
+          height: 42px !important;
+          border-radius: 14px !important;
+          font-weight: 700 !important;
+        }
+
+        /* Fix DatePicker mobile */
+        .ant-picker-dropdown {
+          overscroll-behavior: contain !important;
+          -webkit-overflow-scrolling: touch !important;
+        }
+
+        .ant-picker-panel-container {
+          border-radius: 18px !important;
+          overflow: hidden !important;
+          box-shadow: 0 16px 40px rgba(17, 20, 56, 0.14) !important;
+        }
+
+        .ant-picker-panel {
+          width: 100% !important;
+        }
+
+        .ant-picker-date-panel {
+          width: 100% !important;
+        }
+
+        .ant-picker-content {
+          width: 100% !important;
+        }
+
+        .ant-picker-cell {
+          padding: 4px 0 !important;
+        }
+
+        .ant-picker-cell-inner {
+          min-width: 32px !important;
+          height: 32px !important;
+          line-height: 32px !important;
+        }
+
+        @media (max-width: 640px) {
+          .ant-select-dropdown {
+            position: fixed !important;
+            left: 12px !important;
+            right: 12px !important;
+            width: auto !important;
+          }
+
+          .ant-picker-dropdown {
+            position: fixed !important;
+            left: 12px !important;
+            right: 12px !important;
+            width: auto !important;
+          }
+
+          .ant-picker-panel-container {
+            width: 100% !important;
+          }
         }
       `}</style>
 

@@ -153,7 +153,6 @@ const DashboardScreen: React.FC = () => {
                 </div>
               </div>
             </div>
-            <RightOutlined className="text-gray-400" />
           </div>
 
           {/* Tổng thu */}
@@ -171,7 +170,6 @@ const DashboardScreen: React.FC = () => {
                 </div>
               </div>
             </div>
-            <RightOutlined className="text-gray-400" />
           </div>
 
           {/* Tổng chi */}
@@ -189,7 +187,6 @@ const DashboardScreen: React.FC = () => {
                 </div>
               </div>
             </div>
-            <RightOutlined className="text-gray-400" />
           </div>
         </div>
 
