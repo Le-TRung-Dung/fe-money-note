@@ -90,8 +90,6 @@ function TransactionCreateScreen() {
 
   const [mobilePopupOpen, setMobilePopupOpen] = useState(false);
 
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
   const categoryOptions = useMemo(() => {
     return categories.map((item) => ({
       label: (
@@ -136,77 +134,50 @@ function TransactionCreateScreen() {
   }, [mobilePopupOpen]);
 
   useEffect(() => {
-    const viewport = window.visualViewport;
-
-    const getKeyboardHeight = () => {
-      if (!viewport) return 0;
-
-      const height = window.innerHeight - viewport.height - viewport.offsetTop;
-      return height > 80 ? height : 0;
-    };
-
+    let focusTimer: ReturnType<typeof setTimeout> | null = null;
     const isEditableElement = (element: HTMLElement | null) => {
       if (!element) return false;
 
       return (
         element.tagName === "INPUT" ||
         element.tagName === "TEXTAREA" ||
-        Boolean(element.closest(".ant-input-number")) ||
-        Boolean(element.closest(".ant-picker")) ||
-        Boolean(element.closest(".ant-select"))
+        Boolean(element.closest(".ant-input-number"))
       );
     };
-
-    const scrollFocusedInputIntoView = () => {
+    const scrollToFocusedInput = () => {
       const activeElement = document.activeElement as HTMLElement | null;
 
       if (!isEditableElement(activeElement)) return;
 
-      setTimeout(() => {
-        activeElement?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-          inline: "nearest",
-        });
-      }, 120);
-    };
+      const formItem = activeElement?.closest(".ant-form-item") as HTMLElement;
+      const target = formItem || activeElement;
 
-    const handleViewportChange = () => {
-      const nextKeyboardHeight = getKeyboardHeight();
-
-      setKeyboardHeight(nextKeyboardHeight);
-
-      if (nextKeyboardHeight > 0) {
-        scrollFocusedInputIntoView();
-      }
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest",
+      });
     };
 
     const handleFocusIn = () => {
-      setTimeout(() => {
-        handleViewportChange();
-        scrollFocusedInputIntoView();
-      }, 250);
-    };
+      if (focusTimer) {
+        clearTimeout(focusTimer);
+      }
 
-    const handleFocusOut = () => {
-      setTimeout(() => {
-        const nextKeyboardHeight = getKeyboardHeight();
-        setKeyboardHeight(nextKeyboardHeight);
-      }, 150);
+      // Đợi bàn phím mở xong rồi mới scroll 1 lần
+      focusTimer = setTimeout(() => {
+        scrollToFocusedInput();
+      }, 350);
     };
-
-    viewport?.addEventListener("resize", handleViewportChange);
-    viewport?.addEventListener("scroll", handleViewportChange);
 
     window.addEventListener("focusin", handleFocusIn);
-    window.addEventListener("focusout", handleFocusOut);
 
     return () => {
-      viewport?.removeEventListener("resize", handleViewportChange);
-      viewport?.removeEventListener("scroll", handleViewportChange);
+      if (focusTimer) {
+        clearTimeout(focusTimer);
+      }
 
       window.removeEventListener("focusin", handleFocusIn);
-      window.removeEventListener("focusout", handleFocusOut);
     };
   }, []);
 
@@ -413,9 +384,6 @@ function TransactionCreateScreen() {
     <div
       ref={pageRef}
       className="transaction-mobile-page relative min-h-screen bg-[#F7F8FF] px-3 py-4 overflow-x-hidden"
-      style={{
-        paddingBottom: keyboardHeight > 0 ? keyboardHeight + 32 : 24,
-      }}
     >
       <div className="absolute top-0 left-0 w-64 h-64 bg-[#E0E7FF] rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2 opacity-60 pointer-events-none" />
       <div className="absolute top-20 right-0 w-80 h-80 bg-[#F3E8FF] rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3 opacity-60 pointer-events-none" />
@@ -763,15 +731,22 @@ function TransactionCreateScreen() {
       <style>{`
         .transaction-mobile-page {
           min-height: 100dvh;
+          padding-bottom: calc(24px + env(safe-area-inset-bottom));
           -webkit-overflow-scrolling: touch;
           overscroll-behavior-x: none;
-          scroll-padding-bottom: 180px;
+          scroll-padding-top: 90px;
+          scroll-padding-bottom: 260px;
+        }
+
+        .transaction-mobile-page .ant-form-item {
+          scroll-margin-top: 90px;
+          scroll-margin-bottom: 260px;
         }
 
         .transaction-mobile-page input,
         .transaction-mobile-page textarea {
-          scroll-margin-bottom: 180px;
-          scroll-margin-top: 80px;
+          scroll-margin-top: 90px;
+          scroll-margin-bottom: 260px;
         }
 
         @supports (height: 100dvh) {
