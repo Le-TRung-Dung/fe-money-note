@@ -16,6 +16,8 @@ import SplashScreen from "./pages/SplashScreen";
 import ScrollToTop from "./components/ScrollToTop";
 import TransactionSearchScreen from "./pages/TransactionSearchScreen";
 import TransactionListScreen from "./pages/TransactionListScreen";
+import SavingTransactionListScreen from "./pages/SavingTransactionListScreen";
+import SavingTransactionSearchScreen from "./pages/SavingTransactionSearchScreen";
 
 const App: React.FC = () => {
   return (
@@ -37,14 +39,23 @@ const App: React.FC = () => {
           path="/transactions/:id/edit"
           element={<TransactionCreateScreen />}
         />
+        <Route
+          path="/transactions/search"
+          element={<TransactionSearchScreen />}
+        />
+        <Route
+          path="/savings/transactions/search"
+          element={<SavingTransactionSearchScreen />}
+        />
 
         <Route element={<AppShell />}>
           <Route path="/dashboard" element={<DashboardScreen />} />
           <Route path="/transactions" element={<TransactionListScreen />} />
           <Route
-            path="/transactions/search"
-            element={<TransactionSearchScreen />}
+            path="/savings/transactions"
+            element={<SavingTransactionListScreen />}
           />
+
           <Route path="/savings" element={<SavingScreen />} />
           <Route path="/savings/create" element={<SavingCreateScreen />} />
           <Route path="/savings/:id/edit" element={<SavingCreateScreen />} />

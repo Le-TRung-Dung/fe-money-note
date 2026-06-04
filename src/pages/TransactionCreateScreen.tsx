@@ -45,6 +45,7 @@ import {
 } from "../features/transactions/services/transactionService";
 import { formatMoney } from "../shared/utils/formatMoney";
 import CategoryCreateModal from "../Modal/ModalAddType";
+import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -452,7 +453,7 @@ function TransactionCreateScreen() {
                       : "text-[#5B62FF]"
                   }`}
                 >
-                  <WalletOutlined />
+                  <FaArrowDown />
                   <span>Chi</span>
                 </div>
 
@@ -464,7 +465,7 @@ function TransactionCreateScreen() {
                       : "text-[#22C55E]"
                   }`}
                 >
-                  <ArrowUpOutlined />
+                  <FaArrowUp />
                   <span>Thu</span>
                 </div>
 
@@ -519,10 +520,9 @@ function TransactionCreateScreen() {
                   validator: (_, value) => {
                     if (!value || value <= 0) {
                       return Promise.reject(
-                        new Error("Số tiền phải lớn hơn 0"),
+                        new Error("Số tiền phải lớn hơn 0")
                       );
                     }
-
                     return Promise.resolve();
                   },
                 },
@@ -534,10 +534,21 @@ function TransactionCreateScreen() {
                 placeholder="0 đ"
                 controls={false}
                 inputMode="numeric"
+                pattern="[0-9]*" // Ép mobile hiển thị bàn phím số
+                onKeyPress={(event) => {
+                  // Chặn không cho gõ bất kỳ phím nào ngoài số
+                  if (!/[0-9]/.test(event.key)) {
+                    event.preventDefault();
+                  }
+                }}
                 formatter={(value) =>
                   `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
                 }
-                parser={(value) => Number(value?.replace(/\./g, "") || 0) as 0}
+                parser={(value) => {
+                  // Lọc bỏ sạch mọi ký tự chữ cái/đặc biệt nếu người dùng paste vào
+                  const numericValue = value?.replace(/\D/g, "");
+                  return numericValue ? Number(numericValue) : ("" as any);
+                }}
               />
             </Form.Item>
 

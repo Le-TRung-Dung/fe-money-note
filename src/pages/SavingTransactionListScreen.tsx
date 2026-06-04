@@ -7,22 +7,21 @@ import {
   FilterOutlined,
   QuestionCircleOutlined,
   SearchOutlined,
-  SwapOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 
 import { STORAGE_KEYS } from "../shared/constants/storageKeys";
 import { formatMoney } from "../shared/utils/formatMoney";
-import type { Category, TransactionType } from "../database/db";
+import type { SavingTransaction } from "../database/db";
 import type {
-  TransactionDateRange,
-  TransactionWithCategory,
-} from "../features/transactions/services/transactionListService";
-import { getTransactionListData } from "../features/transactions/services/transactionListService";
+  SavingDateRange,
+  SavingTypeFilter,
+} from "../features/savings/services/savingListService";
+import { getSavingTransactionListData } from "../features/savings/services/savingListService";
 import vi from "../assets/vi.png";
 
-const rangeOptions: { label: string; value: TransactionDateRange }[] = [
+const rangeOptions: { label: string; value: SavingDateRange }[] = [
   { label: "Hôm nay", value: "today" },
   { label: "30 ngày", value: "last30days" },
   { label: "Tuần này", value: "thisWeek" },
@@ -32,35 +31,31 @@ const rangeOptions: { label: string; value: TransactionDateRange }[] = [
   { label: "Theo năm", value: "customYear" },
 ];
 
-const typeOptions: { label: string; value: TransactionType | "all" }[] = [
+const typeOptions: { label: string; value: SavingTypeFilter }[] = [
   { label: "Tất cả", value: "all" },
-  { label: "Khoản chi", value: "expense" },
-  { label: "Khoản thu", value: "income" },
-  { label: "Vay nợ", value: "debt" },
+  { label: "Gửi tiết kiệm", value: "deposit" },
+  { label: "Rút tiết kiệm", value: "withdraw" },
 ];
 
-function TransactionListScreen() {
+function SavingTransactionListScreen() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   /**
-   * Bộ lọc danh sách ĐÃ ÁP DỤNG
+   * Bộ lọc ĐÃ ÁP DỤNG
    */
-  const [range, setRange] = useState<TransactionDateRange>("last30days");
-  const [type, setType] = useState<TransactionType | "all">("all");
-  const [categoryId, setCategoryId] = useState<string | "all">("all");
+  const [range, setRange] = useState<SavingDateRange>("last30days");
+  const [type, setType] = useState<SavingTypeFilter>("all");
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format("YYYY-MM"));
   const [selectedYear, setSelectedYear] = useState(dayjs().format("YYYY"));
 
   /**
-   * Bộ lọc danh sách NHÁP trong modal.
+   * Bộ lọc NHÁP trong modal
    */
-  const [draftRange, setDraftRange] =
-    useState<TransactionDateRange>("last30days");
-  const [draftType, setDraftType] = useState<TransactionType | "all">("all");
-  const [draftCategoryId, setDraftCategoryId] = useState<string | "all">("all");
+  const [draftRange, setDraftRange] = useState<SavingDateRange>("last30days");
+  const [draftType, setDraftType] = useState<SavingTypeFilter>("all");
   const [draftSelectedMonth, setDraftSelectedMonth] = useState(
     dayjs().format("YYYY-MM"),
   );
@@ -69,16 +64,18 @@ function TransactionListScreen() {
   );
 
   const [walletBalance, setWalletBalance] = useState(0);
-  const [transactions, setTransactions] = useState<TransactionWithCategory[]>(
-    [],
-  );
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [transactions, setTransactions] = useState<SavingTransaction[]>([]);
+
+  const [totalDeposit, setTotalDeposit] = useState(0);
+  const [totalWithdraw, setTotalWithdraw] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [netSaving, setNetSaving] = useState(0);
 
   const currentUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
 
   useEffect(() => {
     loadData();
-  }, [range, type, categoryId, selectedMonth, selectedYear]);
+  }, [range, type, selectedMonth, selectedYear]);
 
   const loadData = async () => {
     try {
@@ -90,24 +87,24 @@ function TransactionListScreen() {
 
       setLoading(true);
 
-      const data = await getTransactionListData({
+      const data = await getSavingTransactionListData({
         userId: currentUserId,
         range,
         type,
-        categoryId,
         selectedMonth,
         selectedYear,
-        // Cố định biểu đồ theo tháng hiện tại
-        chartRange: "month",
-        chartMonth: dayjs().format("YYYY-MM"),
       });
 
       setWalletBalance(data.wallet?.balance || 0);
       setTransactions(data.transactions);
-      setCategories(data.categories);
+      setTotalDeposit(data.totalDepositInRange);
+      setTotalWithdraw(data.totalWithdrawInRange);
+      setNetSaving(data.netSavingInRange);
     } catch (error) {
       message.error(
-        error instanceof Error ? error.message : "Không thể tải giao dịch",
+        error instanceof Error
+          ? error.message
+          : "Không thể tải giao dịch tiết kiệm",
       );
     } finally {
       setLoading(false);
@@ -117,7 +114,6 @@ function TransactionListScreen() {
   const openFilterModal = () => {
     setDraftRange(range);
     setDraftType(type);
-    setDraftCategoryId(categoryId);
     setDraftSelectedMonth(selectedMonth);
     setDraftSelectedYear(selectedYear);
     setIsFilterModalOpen(true);
@@ -126,34 +122,20 @@ function TransactionListScreen() {
   const handleApplyFilter = () => {
     setRange(draftRange);
     setType(draftType);
-    setCategoryId(draftCategoryId);
     setSelectedMonth(draftSelectedMonth);
     setSelectedYear(draftSelectedYear);
     setIsFilterModalOpen(false);
   };
 
-  const draftCategoryOptions = useMemo(() => {
-    return [
-      { label: "Tất cả nhóm", value: "all" },
-      ...categories
-        .filter((item) => {
-          if (draftType === "all") return true;
-          return item.type === draftType;
-        })
-        .map((item) => ({
-          label: `${item.icon || "✨"} ${item.name}`,
-          value: item.id,
-        })),
-    ];
-  }, [categories, draftType]);
-
   const groupedTransactions = useMemo(() => {
-    return transactions.reduce<Record<string, TransactionWithCategory[]>>(
+    return transactions.reduce<Record<string, SavingTransaction[]>>(
       (result, item) => {
         if (!result[item.date]) {
           result[item.date] = [];
         }
+
         result[item.date].push(item);
+
         return result;
       },
       {},
@@ -164,6 +146,18 @@ function TransactionListScreen() {
     return new Date(b).getTime() - new Date(a).getTime();
   });
 
+  const currentRangeLabel = useMemo(() => {
+    if (range === "customMonth") {
+      return `Tháng ${dayjs(`${selectedMonth}-01`).format("MM/YYYY")}`;
+    }
+
+    if (range === "customYear") {
+      return `Năm ${selectedYear}`;
+    }
+
+    return rangeOptions.find((item) => item.value === range)?.label || "30 ngày";
+  }, [range, selectedMonth, selectedYear]);
+
   if (loading) {
     return (
       <div className="bg-[#F7F9FF] p-5 pt-8">
@@ -173,47 +167,63 @@ function TransactionListScreen() {
   }
 
   return (
+    // Đã chỉnh sửa: class overflow-x-hidden thay cho overflow-hidden, xóa min-h-screen
     <div className="relative overflow-x-hidden bg-[#F7F9FF] font-sans">
       <div className="pointer-events-none absolute left-0 top-0 h-64 w-64 -translate-x-1/3 -translate-y-1/3 rounded-full bg-[#E0E7FF] opacity-70 blur-[80px]" />
       <div className="pointer-events-none absolute right-0 top-20 h-72 w-72 translate-x-1/3 rounded-full bg-[#F3E8FF] opacity-60 blur-[80px]" />
 
+      {/* Đã chỉnh sửa: Thêm pb-6 để phần đáy không sát viền */}
       <div className="relative z-10 mx-auto max-w-[760px] px-5 pb-6 pt-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <ArrowLeftOutlined
             className="cursor-pointer text-xl text-[#111438]"
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/savings")}
           />
+
           <h1 className="m-0 text-lg font-black text-[#111438]">
-            Lịch sử giao dịch chi tiêu
+            Lịch sử tiết kiệm
           </h1>
+
           <QuestionCircleOutlined className="cursor-pointer text-xl text-[#111438]" />
         </div>
 
-        {/* Balance & Chart */}
+        {/* Balance */}
         <div className="mb-5 rounded-[28px] border border-white bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
           <div className="flex items-start justify-between">
             <div className="ml-3">
               <div className="mb-1 text-[14px] font-semibold text-gray-500">
-                Tổng số dư
+                Tổng tiền tiết kiệm
               </div>
+
               <div className="text-[25px] font-black text-[#111438]">
                 {formatMoney(walletBalance)}
               </div>
+
+              <div className="mt-2 text-[12px] font-semibold text-gray-400">
+                Danh sách đang lọc: {currentRangeLabel}
+              </div>
             </div>
-            <img src={vi} className="h-20" />
+
+            <img src={vi} className="h-20" alt="icon" />
           </div>
         </div>
 
+        {/* Summary */}
+        <div className="mb-5 grid grid-cols-2 gap-2">
+          <SummaryBox label="Đã gửi" value={totalDeposit} color="#22C55E" />
+          <SummaryBox label="Đã rút" value={totalWithdraw} color="#EF4444" />
+        </div>
+
         {/* Search + Filter */}
-        <div className="mb-6 mt-8 flex gap-3">
+        <div className="mb-6 mt-6 flex gap-3">
           <div
-            onClick={() => navigate("/transactions/search")}
+            onClick={() => navigate("/savings/transactions/search")}
             className="flex flex-1 cursor-pointer items-center gap-3 rounded-2xl border border-gray-50 bg-white px-3 py-2 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition hover:bg-gray-50"
           >
             <SearchOutlined className="text-lg text-gray-400" />
             <span className="text-[14px] font-medium text-gray-400">
-              Tìm theo nhóm,...
+              Tìm ghi chú tiết kiệm...
             </span>
           </div>
 
@@ -225,10 +235,10 @@ function TransactionListScreen() {
           </div>
         </div>
 
-        {/* Transactions List */}
+        {/* List */}
         {transactions.length === 0 ? (
           <div className="rounded-[28px] bg-white p-10 text-center shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
-            <Empty description="Không có giao dịch nào" />
+            <Empty description="Không có giao dịch tiết kiệm nào" />
           </div>
         ) : (
           <div className="flex flex-col gap-5">
@@ -236,9 +246,8 @@ function TransactionListScreen() {
               const items = groupedTransactions[date];
 
               const dayTotal = items.reduce((sum, item) => {
-                if (item.type === "expense") return sum - item.amount;
-                if (item.type === "income") return sum + item.amount;
-                return sum;
+                if (item.type === "deposit") return sum + item.amount;
+                return sum - item.amount;
               }, 0);
 
               const isPositive = dayTotal >= 0;
@@ -260,7 +269,7 @@ function TransactionListScreen() {
                     </div>
 
                     <div className="text-[13px] font-semibold text-gray-500">
-                      Tổng {isPositive ? "thu" : "chi"}:{" "}
+                      Tổng {isPositive ? "gửi" : "rút"}:{" "}
                       <span
                         className={
                           isPositive ? "text-[#22C55E]" : "text-[#EF4444]"
@@ -274,10 +283,10 @@ function TransactionListScreen() {
 
                   <div className="flex flex-col gap-4">
                     {items.map((tx) => (
-                      <TransactionItem
+                      <SavingTransactionItem
                         key={tx.id}
                         tx={tx}
-                        onClick={() => navigate(`/transactions/${tx.id}/edit`)}
+                        onClick={() => navigate(`/savings/${tx.id}/edit`)}
                       />
                     ))}
                   </div>
@@ -288,11 +297,11 @@ function TransactionListScreen() {
         )}
       </div>
 
-      {/* Transaction Filter Modal */}
+      {/* Filter Modal */}
       <Modal
         title={
           <span className="text-lg font-black text-[#111438]">
-            Bộ lọc giao dịch
+            Bộ lọc tiết kiệm
           </span>
         }
         open={isFilterModalOpen}
@@ -301,11 +310,9 @@ function TransactionListScreen() {
         centered
         className="custom-modal"
       >
-        {/* LOGIC MỚI BẮT ĐẦU TỪ ĐÂY: Tách nội dung cuộn và nút Áp dụng */}
         <div className="flex flex-col pt-2">
-          
-          {/* Vùng chỉ cuộn các Options, giới hạn cao 60% màn hình */}
-          <div className="custom-scrollbar flex max-h-[60dvh] flex-col gap-6 overflow-y-auto pr-2 pb-4">
+          {/* Vùng chọn options có max-height để tự cuộn */}
+          <div className="custom-scrollbar flex max-h-[60dvh] flex-col gap-6 overflow-y-auto pb-4 pr-2">
             <div>
               <div className="mb-3 text-sm font-bold text-gray-700">
                 Thời gian danh sách
@@ -369,10 +376,7 @@ function TransactionListScreen() {
                 {typeOptions.map((opt) => (
                   <div
                     key={opt.value}
-                    onClick={() => {
-                      setDraftType(opt.value);
-                      setDraftCategoryId("all");
-                    }}
+                    onClick={() => setDraftType(opt.value)}
                     className={`cursor-pointer rounded-xl px-4 py-2 text-[13px] transition-colors ${
                       draftType === opt.value
                         ? "bg-[#895BFF] font-bold text-white shadow-md"
@@ -384,32 +388,9 @@ function TransactionListScreen() {
                 ))}
               </div>
             </div>
-
-            <div>
-              <div className="mb-3 text-sm font-bold text-gray-700">
-                Nhóm chi tiêu
-              </div>
-
-              {/* Phần nhóm chi tiêu vẫn giữ nguyên max-h-48 để tự cuộn riêng */}
-              <div className="custom-scrollbar flex max-h-48 flex-wrap gap-2 overflow-y-auto pb-2 pr-1">
-                {draftCategoryOptions.map((opt) => (
-                  <div
-                    key={opt.value}
-                    onClick={() => setDraftCategoryId(opt.value)}
-                    className={`cursor-pointer rounded-xl border px-4 py-2 text-[13px] transition-colors ${
-                      draftCategoryId === opt.value
-                        ? "border-[#895BFF] bg-[#F0EEFF] font-bold text-[#895BFF]"
-                        : "border-transparent bg-gray-100 font-medium text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    {opt.label}
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
-          {/* Nút Áp dụng được đẩy ra ngoài vùng cuộn, nằm cố định ở đáy */}
+          {/* Nút bấm cố định dưới cùng của modal */}
           <div className="mt-2 border-t border-gray-100 pt-4">
             <Button
               type="primary"
@@ -424,10 +405,6 @@ function TransactionListScreen() {
       </Modal>
 
       <style>{`
-        .pb-safe {
-          padding-bottom: env(safe-area-inset-bottom, 16px);
-        }
-
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
         }
@@ -450,26 +427,45 @@ function TransactionListScreen() {
   );
 }
 
-function TransactionItem({
+function SummaryBox({
+  label,
+  value,
+  color,
+  prefix = "",
+}: {
+  label: string;
+  value: number;
+  color: string;
+  prefix?: string;
+}) {
+  return (
+    <div className="rounded-[20px] bg-white px-3 py-4 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+      <div className="mb-1 text-[12px] font-semibold text-gray-400">
+        {label}
+      </div>
+
+      <div
+        className="truncate text-[14px] font-black"
+        style={{ color }}
+      >
+        {prefix}
+        {formatMoney(value)}
+      </div>
+    </div>
+  );
+}
+
+function SavingTransactionItem({
   tx,
   onClick,
 }: {
-  tx: TransactionWithCategory;
+  tx: SavingTransaction;
   onClick: () => void;
 }) {
-  const isIncome = tx.type === "income";
-  const isExpense = tx.type === "expense";
+  const isDeposit = tx.type === "deposit";
 
-  const color = isIncome ? "#22C55E" : isExpense ? "#EF4444" : "#895BFF";
-  const prefix = isIncome ? "+" : isExpense ? "-" : "";
-
-  const icon = isIncome ? (
-    <ArrowUpOutlined />
-  ) : isExpense ? (
-    <ArrowDownOutlined />
-  ) : (
-    <SwapOutlined />
-  );
+  const color = isDeposit ? "#22C55E" : "#EF4444";
+  const prefix = isDeposit ? "+" : "-";
 
   return (
     <div
@@ -478,23 +474,29 @@ function TransactionItem({
     >
       <div className="flex w-[70%] items-center gap-3">
         <div
-          className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-[20px]"
+          className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-[18px]"
           style={{
-            backgroundColor: `${tx.category?.color || color}15`,
-            color: tx.category?.color || color,
+            backgroundColor: `${color}15`,
+            color,
           }}
         >
-          {tx.category?.icon || icon}
+          {isDeposit ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
         </div>
 
         <div className="truncate">
           <div className="truncate text-[15px] font-bold text-[#111438]">
-            {tx.category?.name || "Không rõ nhóm"}
+            {tx.note || (isDeposit ? "Gửi tiết kiệm" : "Rút tiết kiệm")}
           </div>
+
+          {tx.description && (
+            <div className="mt-0.5 truncate text-[12px] font-medium text-gray-400">
+              {tx.description}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex w-[30%] items-center justify-end gap-3">
+      <div className="flex w-[30%] items-center justify-end">
         <div
           className="whitespace-nowrap text-[15px] font-black"
           style={{ color }}
@@ -519,4 +521,4 @@ function getDateLabel(date: string) {
   return dayjs(date).format("DD/MM/YYYY");
 }
 
-export default TransactionListScreen;
+export default SavingTransactionListScreen;

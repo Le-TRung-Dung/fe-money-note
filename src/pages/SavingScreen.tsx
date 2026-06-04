@@ -351,7 +351,7 @@ function SavingScreen() {
             <div className="text-[16px] font-black text-[#111438]">
               Lịch sử giao dịch
             </div>
-            <div className="cursor-pointer text-[13px] font-medium text-[#895BFF]">
+            <div className="cursor-pointer text-[13px] font-medium text-[#895BFF]" onClick={() => navigate("/savings/transactions")}>
               Xem tất cả <RightOutlined className="text-[10px]" />
             </div>
           </div>
