@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { Modal, Skeleton, message } from "antd";
-import {
-  RightOutlined,
-  LogoutOutlined,
-} from "@ant-design/icons";
+import { RightOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 import type { User } from "../database/db";
 import { getCurrentUser, logout } from "../features/auth/services/authService";
 import { FaLock } from "react-icons/fa";
+import { SiSimpleanalytics } from "react-icons/si";
 
 // Component con để render từng dòng menu cài đặt
 const MenuRow = ({ icon, title, subtitle, onClick, danger = false }: any) => (
@@ -134,6 +132,12 @@ function AccountScreen() {
                     state: { isChangePassword: true },
                   })
                 }
+              />
+              <MenuRow
+                icon={<SiSimpleanalytics />}
+                title="Thống kê giao dịch"
+                subtitle="Thống kê và xuất file Excel"
+                onClick={() => navigate("/statistics")}
               />
             </div>
           </div>

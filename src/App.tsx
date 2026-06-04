@@ -20,6 +20,7 @@ import TransactionListScreen from "./pages/TransactionListScreen";
 import SavingTransactionListScreen from "./pages/SavingTransactionListScreen";
 import SavingTransactionSearchScreen from "./pages/SavingTransactionSearchScreen";
 import NotificationScreen from "./pages/NotificationScreen";
+import TransactionStatisticScreen from "./pages/TransactionStatisticScreen";
 
 const App: React.FC = () => {
   return (
@@ -54,6 +55,7 @@ const App: React.FC = () => {
             path="/transactions/:id/edit"
             element={<TransactionCreateScreen />}
           />
+          <Route path="/statistics" element={<TransactionStatisticScreen />} />
 
           <Route path="/savings" element={<SavingScreen />} />
           <Route
