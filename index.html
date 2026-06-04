@@ -1,13 +1,33 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <!-- Icon trên tab trình duyệt -->
+    <link rel="icon" type="image/png" href="/fe-money-note/logo.png" />
+
+    <!-- Màu theme của app -->
+    <meta name="theme-color" content="#895BFF" />
+
+    <!-- Cấu hình cho iPhone khi Add to Home Screen -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Money note" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <!-- Icon khi thêm ra màn hình chính iPhone -->
+    <link rel="apple-touch-icon" href="/fe-money-note/icons/logo.png" />
+
     <title>Money note</title>
   </head>
+
   <body>
     <div id="root"></div>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
