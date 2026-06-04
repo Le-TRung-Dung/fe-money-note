@@ -92,7 +92,7 @@ const ForgotPasswordScreen: React.FC = () => {
         },
       }}
     >
-      <div className="relative min-h-screen w-full overflow-hidden bg-[#FAFAFF] px-5 py-8 font-sans text-[#080C35]">
+      <div className="relative min-h-[100svh] w-full overflow-hidden bg-[#FAFAFF] px-5 py-8 font-sans text-[#080C35]">
         <div className="pointer-events-none absolute -right-28 -top-28 h-80 w-80 rounded-full bg-[#D7C8FF] blur-sm opacity-75" />
         <div className="pointer-events-none absolute -left-28 top-[45%] h-64 w-64 rounded-full bg-[#DDEAFF] opacity-90" />
         <div className="pointer-events-none absolute bottom-16 right-[-120px] h-80 w-80 rounded-full bg-[#EEF3FF] opacity-95" />
