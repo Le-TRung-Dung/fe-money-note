@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Modal } from "antd";
 import { useLocation } from "react-router-dom";
-import vi from '../assets/vi.png'
-import logo from '../assets/logo.png'
-import heo from '../assets/conlon.png'
+import vi from '../assets/vi.png';
+import logo from '../assets/logo.png';
+import heo from '../assets/conlon.png';
 
 import { STORAGE_KEYS } from "../shared/constants/storageKeys";
 import { FaChartColumn } from "react-icons/fa6";
@@ -16,17 +16,17 @@ const onboardingSteps = [
     description: "Tiết kiệm hôm sau\nTương lai ngày mai",
     buttonText: "Tiếp theo",
     content: (
-      <div className="relative flex w-full flex-col items-center">
+      <div className="relative mt-2 flex w-full flex-col items-center">
         {/* ĐIỀN LINK ẢNH VÍ TIỀN 3D VÀO src DƯỚI ĐÂY */}
-        <div className="flex justify-center">
+        <div className="mb-2 flex justify-center">
           <img 
             src={vi} 
             alt="Ví tiền 3D" 
-            className="h-32 w-auto object-contain drop-shadow-md" 
+            className="h-24 w-auto object-contain drop-shadow-md" 
           />
         </div>
 
-        <div className="w-full space-y-3 rounded-2xl bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-50">
+        <div className="w-full space-y-2 rounded-2xl bg-white p-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-50">
           {[
             { icon: <FaChartColumn />, text: "Theo dõi thu chi" },
             { icon: <BsPiggyBank />, text: "Tiết kiệm thông minh" },
@@ -55,23 +55,23 @@ const onboardingSteps = [
     description: "Thêm khoản chi, thu nhập và vay nợ\nchỉ trong vài chạm.",
     buttonText: "Tiếp theo",
     content: (
-      <div className="mt-6 w-full rounded-2xl bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-50">
-        <div className="mb-4 flex gap-2 rounded-xl bg-gray-50 p-1">
-          <div className="flex-1 rounded-lg bg-[#7161EF] py-2 text-center text-[12px] font-semibold text-white shadow-sm">
+      <div className="mt-2 w-full rounded-2xl bg-white p-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-50">
+        <div className="mb-3 flex gap-2 rounded-xl bg-gray-50 p-1">
+          <div className="flex-1 rounded-lg bg-[#7161EF] py-1.5 text-center text-[12px] font-semibold text-white shadow-sm">
             Khoản chi
           </div>
-          <div className="flex-1 py-2 text-center text-[12px] font-semibold text-gray-500">
+          <div className="flex-1 py-1.5 text-center text-[12px] font-semibold text-gray-500">
             Khoản thu
           </div>
-          <div className="flex-1 py-2 text-center text-[12px] font-semibold text-gray-500">
+          <div className="flex-1 py-1.5 text-center text-[12px] font-semibold text-gray-500">
             Vay nợ
           </div>
         </div>
 
         <div className="mb-1 text-[11px] font-medium text-gray-500">Số tiền</div>
-        <div className="mb-4 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
+        <div className="mb-3 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
           <span className="text-lg font-bold text-gray-900">150.000 đ</span>
-          <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
         </div>
@@ -80,14 +80,14 @@ const onboardingSteps = [
           <div className="flex flex-1 items-center justify-between rounded-xl border border-gray-100 bg-white px-3 py-2.5">
             <div className="flex items-center gap-2">
               <span className="text-gray-400">🏷️</span>
-              <span className="text-[13px] font-medium text-gray-700">Ăn uống</span>
+              <span className="text-[12px] font-medium text-gray-700">Ăn uống</span>
             </div>
             <svg className="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
           </div>
           <div className="flex flex-1 items-center justify-between rounded-xl border border-gray-100 bg-white px-3 py-2.5">
             <div className="flex items-center gap-2">
               <span className="text-gray-400">📅</span>
-              <span className="text-[13px] font-medium text-gray-700">Hôm nay</span>
+              <span className="text-[12px] font-medium text-gray-700">Hôm nay</span>
             </div>
             <svg className="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
           </div>
@@ -100,7 +100,7 @@ const onboardingSteps = [
     description: "Đặt mục tiêu và theo dõi tiến độ\ntiết kiệm mỗi ngày.",
     buttonText: "Tiếp theo",
     content: (
-      <div className="mt-6 w-full rounded-2xl bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-50">
+      <div className="mt-2 w-full rounded-2xl bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-50">
         <div className="mb-1 flex items-center justify-between">
           <span className="text-[13px] font-semibold text-gray-800">Mục tiêu du lịch Đà Lạt</span>
           <span className="text-gray-400">•••</span>
@@ -111,7 +111,7 @@ const onboardingSteps = [
           <div className="text-[11px] font-medium text-gray-500">64% • Còn 14.400.000 đ</div>
           
           {/* ĐIỀN LINK ẢNH HEO ĐẤT 3D VÀO src DƯỚI ĐÂY */}
-          <div className="flex h-14 items-center justify-center">
+          <div className="flex h-12 items-center justify-center">
             <img 
               src={heo} 
               alt="Heo đất 3D" 
@@ -120,7 +120,7 @@ const onboardingSteps = [
           </div>
         </div>
 
-        <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+        <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-gray-100">
           <div className="h-full w-[64%] bg-[#7161EF] rounded-full"></div>
         </div>
       </div>
@@ -131,31 +131,31 @@ const onboardingSteps = [
     description: "Xem nhanh tình hình tài chính\nđể chi tiêu hợp lý hơn.",
     buttonText: "Bắt đầu ngay",
     content: (
-      <div className="mt-6 w-full rounded-2xl bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-50">
-        <div className="mb-4 flex items-center gap-1 text-[12px] font-semibold text-gray-700">
+      <div className="mt-2 w-full rounded-2xl bg-white p-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-50">
+        <div className="mb-3 flex items-center gap-1 text-[12px] font-semibold text-gray-700">
           Tổng quan tháng 5
           <svg className="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
         </div>
         
-        <div className="flex items-center gap-4 mb-4">
-          <div className="relative h-24 w-24 rounded-full border-[12px] border-blue-400 border-r-pink-400 border-b-green-400 border-l-[#7161EF]">
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-full m-1">
-              <span className="text-[8px] text-gray-500">Tổng chi</span>
-              <span className="text-[10px] font-bold text-gray-800">12.450.000 đ</span>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="relative h-20 w-20 rounded-full border-[10px] border-blue-400 border-r-pink-400 border-b-green-400 border-l-[#7161EF]">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-full m-0.5">
+              <span className="text-[7px] text-gray-500">Tổng chi</span>
+              <span className="text-[9px] font-bold text-gray-800">12.450k</span>
             </div>
           </div>
           
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 space-y-1.5">
             {[
-              { color: "bg-[#7161EF]", name: "Ăn uống", val: "4.200.000 đ", pct: "34%" },
-              { color: "bg-blue-400", name: "Đi lại", val: "2.800.000 đ", pct: "22%" },
-              { color: "bg-pink-400", name: "Mua sắm", val: "3.150.000 đ", pct: "25%" },
-              { color: "bg-green-400", name: "Khác", val: "2.300.000 đ", pct: "19%" },
+              { color: "bg-[#7161EF]", name: "Ăn uống", val: "4.200k", pct: "34%" },
+              { color: "bg-blue-400", name: "Đi lại", val: "2.800k", pct: "22%" },
+              { color: "bg-pink-400", name: "Mua sắm", val: "3.150k", pct: "25%" },
+              { color: "bg-green-400", name: "Khác", val: "2.300k", pct: "19%" },
             ].map((item, idx) => (
               <div key={idx} className="flex items-center justify-between text-[10px]">
-                <div className="flex items-center gap-1.5 w-16">
+                <div className="flex items-center gap-1.5 w-14">
                   <span className={`h-2 w-2 rounded-full ${item.color}`}></span>
-                  <span className="text-gray-600">{item.name}</span>
+                  <span className="text-gray-600 line-clamp-1">{item.name}</span>
                 </div>
                 <span className="font-semibold text-gray-800">{item.val}</span>
                 <span className="text-gray-400 w-6 text-right">{item.pct}</span>
@@ -166,12 +166,12 @@ const onboardingSteps = [
 
         <div className="grid grid-cols-3 gap-2">
           {[
-            { icon: "↓", iconColor: "text-green-500", bg: "bg-green-50", label: "Tổng thu", val: "18.750.000 đ", valColor: "text-green-600" },
-            { icon: "↑", iconColor: "text-red-500", bg: "bg-red-50", label: "Tổng chi", val: "12.450.000 đ", valColor: "text-red-500" },
-            { icon: "💳", iconColor: "text-[#7161EF]", bg: "bg-[#F5F3FF]", label: "Số dư", val: "6.300.000 đ", valColor: "text-[#7161EF]" },
+            { icon: "↓", iconColor: "text-green-500", bg: "bg-green-50", label: "Tổng thu", val: "18.750k", valColor: "text-green-600" },
+            { icon: "↑", iconColor: "text-red-500", bg: "bg-red-50", label: "Tổng chi", val: "12.450k", valColor: "text-red-500" },
+            { icon: "💳", iconColor: "text-[#7161EF]", bg: "bg-[#F5F3FF]", label: "Số dư", val: "6.300k", valColor: "text-[#7161EF]" },
           ].map((stat, idx) => (
-            <div key={idx} className="flex flex-col items-center justify-center rounded-xl bg-gray-50 py-2">
-              <div className={`mb-1 flex h-6 w-6 items-center justify-center rounded-full ${stat.bg} text-[12px] font-bold ${stat.iconColor}`}>
+            <div key={idx} className="flex flex-col items-center justify-center rounded-xl bg-gray-50 py-1.5">
+              <div className={`mb-0.5 flex h-5 w-5 items-center justify-center rounded-full ${stat.bg} text-[10px] font-bold ${stat.iconColor}`}>
                 {stat.icon}
               </div>
               <div className="text-[9px] text-gray-500">{stat.label}</div>
@@ -234,28 +234,29 @@ function OnboardingModal() {
       footer={null}
       closable={false}
       centered
-      width={380}
+      width={360}
       zIndex={9999}
       styles={{
         body: { padding: 0 },
         content: {
           padding: 0,
-          borderRadius: "32px",
+          borderRadius: "28px",
           overflow: "hidden",
           backgroundColor: "#FAFAFF"
         }
       }}
     >
-      <div className="relative flex flex-col h-[740px] max-h-[90vh] ">
+      {/* Đã giảm chiều cao xuống h-[500px] và thêm padding p-6 */}
+      <div className="relative flex flex-col h-[500px] max-h-[90vh] p-6">
         <div className="flex-1 flex flex-col">
-          <div className="mb-6 flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#7161EF] shadow-lg shadow-indigo-200">
-              <img src={logo} />
+          <div className="mb-3 flex justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl shadow-md ">
+              <img src={logo} alt="Logo" className="h-12 w-12 object-contain" />
             </div>
           </div>
 
-          <div className="text-center mb-2">
-            <p className="whitespace-pre-line text-[14px] leading-[1.6] text-gray-500 font-medium">
+          <div className="text-center mb-1">
+            <p className="whitespace-pre-line text-[14px] leading-[1.5] text-gray-500 font-medium">
               {step.description}
             </p>
           </div>
@@ -266,12 +267,12 @@ function OnboardingModal() {
         </div>
 
         <div className="mt-auto flex flex-col items-center">
-          <div className="mb-6 flex justify-center gap-2 mt-2">
+          <div className="mb-4 flex justify-center gap-2 mt-2">
             {onboardingSteps.map((_, index) => (
               <div
                 key={index}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentStep ? "w-2 bg-[#7161EF]" : "w-2 bg-gray-200"
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  index === currentStep ? "w-3 bg-[#7161EF]" : "w-1.5 bg-gray-200"
                 }`}
               />
             ))}
@@ -279,7 +280,7 @@ function OnboardingModal() {
 
           <button
             onClick={handleNext}
-            className="w-full rounded-[18px] bg-[#7161EF] py-2 text-[15px] font-bold text-white transition-all hover:bg-[#6252df] active:scale-[0.98]"
+            className="w-full rounded-[16px] bg-[#7161EF] py-3 text-[14px] font-bold text-white transition-all hover:bg-[#6252df] active:scale-[0.98]"
           >
             {step.buttonText}
           </button>
