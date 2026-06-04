@@ -4,12 +4,10 @@ import OnboardingModal from "../Modal/OnboardingModal";
 
 function AppShell() {
   return (
-    <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-[#F7F9FF]">
-      
-      {/* 2. Vùng chứa nội dung trang: Cho phép tự cuộn độc lập (overflow-y-auto) */}
-      <div className="flex-1 overflow-y-auto pb-28 relative">
+    <div className="fixed inset-0 flex h-[100dvh] w-full flex-col overflow-hidden bg-[#F7F9FF]">
+      <main className="app-scroll relative flex-1 overflow-y-auto pb-28">
         <Outlet />
-      </div>
+      </main>
 
       <BottomNav />
       <OnboardingModal />
