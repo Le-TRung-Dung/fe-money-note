@@ -87,6 +87,11 @@ function SavingScreen() {
     );
   }
 
+  const handleOpenCreateGoal = () => {
+    setEditingGoal(null);
+    setGoalModalOpen(true);
+  };
+
   const handleOpenEditGoal = (goal: SavingGoal) => {
     setEditingGoal(goal);
     setGoalModalOpen(true);
@@ -277,6 +282,25 @@ function SavingScreen() {
             <img src={ketsat} />
           </div>
         </div>
+        
+        {goals.length === 0 && (
+          <div
+            onClick={handleOpenCreateGoal}
+            className="mb-4 cursor-pointer rounded-[24px] border border-dashed border-[#C9B8FF] bg-white p-5 text-center shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition active:scale-[0.98]"
+          >
+            <div className="mb-2 text-[28px]">🎯</div>
+            <div className="text-[15px] font-black text-[#111438]">
+              Chưa có mục tiêu tiết kiệm
+            </div>
+            <div className="mt-1 text-[12px] font-medium text-gray-400">
+              Tạo mục tiêu đầu tiên để biết bạn còn bao nhiêu % nữa là hoàn
+              thành
+            </div>
+            <div className="mt-4 inline-flex h-10 items-center justify-center rounded-[14px] bg-[#895BFF] px-4 text-[13px] font-bold text-white">
+              Tạo mục tiêu ngay
+            </div>
+          </div>
+        )}
 
         {/* Goal Progress Card */}
         {goals.map((goal) => {
@@ -351,7 +375,10 @@ function SavingScreen() {
             <div className="text-[16px] font-black text-[#111438]">
               Lịch sử giao dịch
             </div>
-            <div className="cursor-pointer text-[13px] font-medium text-[#895BFF]" onClick={() => navigate("/savings/transactions")}>
+            <div
+              className="cursor-pointer text-[13px] font-medium text-[#895BFF]"
+              onClick={() => navigate("/savings/transactions")}
+            >
               Xem tất cả <RightOutlined className="text-[10px]" />
             </div>
           </div>

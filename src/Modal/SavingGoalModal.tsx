@@ -135,6 +135,8 @@ function SavingGoalModal({
     <Modal
       title={isEditMode ? "Sửa mục tiêu tiết kiệm" : "Tạo mục tiêu tiết kiệm"}
       open={open}
+      centered // Căn giữa modal trên màn hình
+      className="custom-modal"
       onCancel={() => {
         form.resetFields();
         onCancel();
@@ -169,91 +171,117 @@ function SavingGoalModal({
         </Button>,
       ]}
     >
-      <Form form={form} layout="vertical" requiredMark={false}>
-        <Form.Item
-          name="name"
-          label="Tên mục tiêu"
-          rules={[
-            {
-              required: true,
-              message: "Vui lòng nhập tên mục tiêu",
-            },
-          ]}
-        >
-          <Input placeholder="Ví dụ: Mua MacBook, Quỹ dự phòng..." />
-        </Form.Item>
-
-        <Form.Item
-          name="targetAmount"
-          label="Số tiền mục tiêu"
-          rules={[
-            {
-              required: true,
-              message: "Vui lòng nhập số tiền mục tiêu",
-            },
-            {
-              validator: (_, value) => {
-                if (!value || value <= 0) {
-                  return Promise.reject(
-                    new Error("Số tiền mục tiêu phải lớn hơn 0")
-                  );
-                }
-
-                return Promise.resolve();
+      {/* Vùng chứa form giới hạn chiều cao 65% màn hình và tự cuộn */}
+      <div className="custom-scrollbar mt-4 max-h-[65dvh] overflow-y-auto pr-3">
+        <Form form={form} layout="vertical" requiredMark={false}>
+          <Form.Item
+            name="name"
+            label="Tên mục tiêu"
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng nhập tên mục tiêu",
               },
-            },
-          ]}
-        >
-          <InputNumber
-            className="w-full"
-            min={0}
-            placeholder="0 đ"
-            controls={false}
-            formatter={(value) =>
-              `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-            }
-            parser={(value) => Number(value?.replace(/\./g, "") || 0) as 0}
-            addonAfter="đ"
-          />
-        </Form.Item>
+            ]}
+          >
+            <Input placeholder="Ví dụ: Mua MacBook, Quỹ dự phòng..." />
+          </Form.Item>
 
-        <Form.Item
-          name="icon"
-          label="Icon"
-          rules={[
-            {
-              required: true,
-              message: "Vui lòng chọn icon",
-            },
-          ]}
-        >
-          <div className="grid grid-cols-6 gap-2">
-            {iconOptions.map((icon) => (
-              <button
-                key={icon}
-                type="button"
-                onClick={() => form.setFieldsValue({ icon })}
-                className="h-11 w-11 rounded-2xl border border-[#E5E7EB] bg-white text-xl transition hover:border-[#895BFF] hover:bg-[#F7F8FF]"
-              >
-                {icon}
-              </button>
-            ))}
-          </div>
-        </Form.Item>
+          <Form.Item
+            name="targetAmount"
+            label="Số tiền mục tiêu"
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng nhập số tiền mục tiêu",
+              },
+              {
+                validator: (_, value) => {
+                  if (!value || value <= 0) {
+                    return Promise.reject(
+                      new Error("Số tiền mục tiêu phải lớn hơn 0")
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
+            <InputNumber
+              className="w-full"
+              min={0}
+              placeholder="0"
+              controls={false}
+              inputMode="decimal"
+              pattern="[0-9.]*"
+              onKeyPress={(event) => {
+                if (!/[0-9.]/.test(event.key)) {
+                  event.preventDefault();
+                }
+              }}
+              formatter={(value) =>
+                `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+              }
+              parser={(value) => {
+                const numericValue = value?.replace(/\D/g, "");
+                return numericValue ? Number(numericValue) : ("" as any);
+              }}
+              addonAfter="đ"
+            />
+          </Form.Item>
 
-        <Form.Item name="deadline" label="Ngày mong muốn đạt được">
-          <DatePicker className="w-full" format="DD/MM/YYYY" />
-        </Form.Item>
+          <Form.Item
+            name="icon"
+            label="Icon"
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng chọn icon",
+              },
+            ]}
+          >
+            <div className="grid grid-cols-6 gap-2">
+              {iconOptions.map((icon) => (
+                <button
+                  key={icon}
+                  type="button"
+                  onClick={() => form.setFieldsValue({ icon })}
+                  className="h-11 w-11 rounded-2xl border border-[#E5E7EB] bg-white text-xl transition hover:border-[#895BFF] hover:bg-[#F7F8FF] focus:border-[#895BFF] focus:bg-[#F7F8FF]"
+                >
+                  {icon}
+                </button>
+              ))}
+            </div>
+          </Form.Item>
 
-        <Form.Item name="description" label="Mô tả">
-          <Input.TextArea
-            rows={3}
-            placeholder="Ví dụ: Cố gắng đạt mục tiêu trước cuối năm..."
-            maxLength={300}
-            showCount
-          />
-        </Form.Item>
-      </Form>
+          <Form.Item name="deadline" label="Ngày mong muốn đạt được">
+            <DatePicker className="w-full h-[40px]" format="DD/MM/YYYY" />
+          </Form.Item>
+
+          <Form.Item name="description" label="Mô tả">
+            <Input.TextArea
+              rows={3}
+              placeholder="Ví dụ: Cố gắng đạt mục tiêu trước cuối năm..."
+              maxLength={300}
+              showCount
+            />
+          </Form.Item>
+        </Form>
+      </div>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #E5E7EB;
+          border-radius: 4px;
+        }
+        .custom-modal .ant-modal-content {
+          border-radius: 20px;
+          padding: 24px 20px;
+        }
+      `}</style>
     </Modal>
   );
 }

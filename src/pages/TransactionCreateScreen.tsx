@@ -533,11 +533,11 @@ function TransactionCreateScreen() {
                 min={0}
                 placeholder="0 đ"
                 controls={false}
-                inputMode="numeric"
-                pattern="[0-9]*" // Ép mobile hiển thị bàn phím số
+                inputMode="decimal" // Cập nhật: Gọi bàn phím số có kèm dấu chấm/phẩy trên mobile
+                pattern="[0-9.]*" // Cập nhật: Cho phép cả số và dấu chấm
                 onKeyPress={(event) => {
-                  // Chặn không cho gõ bất kỳ phím nào ngoài số
-                  if (!/[0-9]/.test(event.key)) {
+                  // Cập nhật: Chặn nếu phím gõ KHÔNG phải là số hoặc dấu chấm
+                  if (!/[0-9.]/.test(event.key)) {
                     event.preventDefault();
                   }
                 }}
@@ -545,7 +545,8 @@ function TransactionCreateScreen() {
                   `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
                 }
                 parser={(value) => {
-                  // Lọc bỏ sạch mọi ký tự chữ cái/đặc biệt nếu người dùng paste vào
+                  // GIỮ NGUYÊN: Dù cho phép gõ dấu ".", ta vẫn phải xóa nó đi khi parse
+                  // để "1.000" biến thành số 1000 chuẩn thay vì bị hiểu nhầm là số 1.
                   const numericValue = value?.replace(/\D/g, "");
                   return numericValue ? Number(numericValue) : ("" as any);
                 }}
