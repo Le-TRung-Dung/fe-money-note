@@ -46,7 +46,7 @@ export default function LandingPage() {
         /* Lưu ý: Đảm bảo đường dẫn ảnh ở thư mục public/assets hợp lệ trong dự án React của bạn */
       >
         {/* Vùng chứa nút bấm: Set cứng vị trí tuyệt đối ở dưới cùng */}
-        <div className="absolute bottom-[54px] left-[26px] right-[26px]">
+        <div className="absolute bottom-[5%] left-[26px] right-[26px]">
           {/* Nút bấm Ant Design (Button) được override bằng TailwindCSS để y hệt bản Mobile */}
           <Button
             type="primary"

@@ -167,27 +167,30 @@ function SavingTransactionListScreen() {
   }
 
   return (
-    // Đã chỉnh sửa: class overflow-x-hidden thay cho overflow-hidden, xóa min-h-screen
-    <div className="relative overflow-x-hidden bg-[#F7F9FF] font-sans">
-      <div className="pointer-events-none absolute left-0 top-0 h-64 w-64 -translate-x-1/3 -translate-y-1/3 rounded-full bg-[#E0E7FF] opacity-70 blur-[80px]" />
-      <div className="pointer-events-none absolute right-0 top-20 h-72 w-72 translate-x-1/3 rounded-full bg-[#F3E8FF] opacity-60 blur-[80px]" />
+    // Xóa mọi class overflow đi vì không cần thiết nữa
+    <div className="bg-[#F7F9FF] font-sans">
+      
+      {/* 1. SỬA ĐÂY: Dùng fixed thay cho absolute để vòng tròn không bao giờ đẩy chiều cao trang */}
+      <div className="pointer-events-none fixed left-0 top-0 z-0 h-64 w-64 -translate-x-1/3 -translate-y-1/3 rounded-full bg-[#E0E7FF] opacity-70 blur-[80px]" />
+      <div className="pointer-events-none fixed right-0 top-20 z-0 h-72 w-72 translate-x-1/3 rounded-full bg-[#F3E8FF] opacity-60 blur-[80px]" />
 
-      {/* Đã chỉnh sửa: Thêm pb-6 để phần đáy không sát viền */}
-      <div className="relative z-10 mx-auto max-w-[760px] px-5 pb-6 pt-8">
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+      {/* 2. SỬA ĐÂY: Header được làm Sticky để đứng im khi cuộn giống trang Search */}
+      <div className="sticky top-0 z-20 bg-[#F7F9FF]/80 px-5 pb-3 pt-8 backdrop-blur-md shadow-[0_4px_10px_-4px_rgba(0,0,0,0.05)]">
+        <div className="mx-auto max-w-[760px] flex items-center justify-between">
           <ArrowLeftOutlined
             className="cursor-pointer text-xl text-[#111438]"
             onClick={() => navigate("/savings")}
           />
-
           <h1 className="m-0 text-lg font-black text-[#111438]">
             Lịch sử tiết kiệm
           </h1>
-
           <QuestionCircleOutlined className="cursor-pointer text-xl text-[#111438]" />
         </div>
+      </div>
 
+      {/* 3. VÙNG NỘI DUNG CUỘN ĐƯỢC */}
+      <div className="relative z-10 mx-auto max-w-[760px] px-5 pb-6 pt-5">
+        
         {/* Balance */}
         <div className="mb-5 rounded-[28px] border border-white bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
           <div className="flex items-start justify-between">
@@ -311,7 +314,6 @@ function SavingTransactionListScreen() {
         className="custom-modal"
       >
         <div className="flex flex-col pt-2">
-          {/* Vùng chọn options có max-height để tự cuộn */}
           <div className="custom-scrollbar flex max-h-[60dvh] flex-col gap-6 overflow-y-auto pb-4 pr-2">
             <div>
               <div className="mb-3 text-sm font-bold text-gray-700">
@@ -390,7 +392,6 @@ function SavingTransactionListScreen() {
             </div>
           </div>
 
-          {/* Nút bấm cố định dưới cùng của modal */}
           <div className="mt-2 border-t border-gray-100 pt-4">
             <Button
               type="primary"

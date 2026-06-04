@@ -93,6 +93,28 @@ export type Transaction = {
   updatedAt: string;
 };
 
+export type AppNotificationType =
+  | "welcome"
+  | "first_transaction"
+  | "first_saving"
+  | "first_goal"
+  | "inactive"
+  | "fun";
+
+export type AppNotification = {
+  id: string;
+  userId: string;
+
+  type: AppNotificationType;
+  title: string;
+  description: string;
+
+  isRead: boolean;
+  actionUrl?: string;
+
+  createdAt: string;
+};
+
 class MoneyNoteDatabase extends Dexie {
   users!: Table<User, string>;
   wallets!: Table<Wallet, string>;
@@ -100,6 +122,7 @@ class MoneyNoteDatabase extends Dexie {
   transactions!: Table<Transaction, string>;
   savingTransactions!: Table<SavingTransaction, string>;
   savingGoals!: Table<SavingGoal, string>;
+  notifications!: Table<AppNotification, string>;
 
   constructor() {
     super("MoneyNoteDB");
@@ -133,6 +156,17 @@ class MoneyNoteDatabase extends Dexie {
         "id, userId, walletId, categoryId, type, debtType, date, createdAt",
       savingTransactions: "id, userId, walletId, type, date, createdAt",
       savingGoals: "id, userId, targetAmount, deadline, createdAt",
+    });
+
+    this.version(5).stores({
+      users: "id, &username",
+      wallets: "id, userId, isDefault, type",
+      categories: "id, userId, type, name",
+      transactions:
+        "id, userId, walletId, categoryId, type, debtType, date, createdAt",
+      savingTransactions: "id, userId, walletId, type, date, createdAt",
+      savingGoals: "id, userId, targetAmount, deadline, createdAt",
+      notifications: "id, userId, type, isRead, createdAt",
     });
   }
 }

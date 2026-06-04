@@ -3,6 +3,7 @@ import type { Transaction } from "../../../database/db";
 import { createId } from "../../../shared/utils/id";
 import type { CreateTransactionPayload } from "../types";
 import type { Category, TransactionType } from "../../../database/db";
+import { notifyFirstExpenseTransaction } from "../../notifications/services/notificationService";
 
 export async function getDefaultWalletByUser(userId: string) {
   const wallet = await db.wallets
@@ -74,9 +75,12 @@ export async function createTransaction(payload: CreateTransactionPayload) {
     await db.transactions.add(transaction);
   });
 
+  if (payload.type === "expense") {
+    await notifyFirstExpenseTransaction(payload.userId);
+  }
+
   return transaction;
 }
-
 function calculateNewWalletBalance(params: {
   currentBalance: number;
   type: Transaction["type"];

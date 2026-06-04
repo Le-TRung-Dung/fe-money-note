@@ -18,6 +18,7 @@ import TransactionSearchScreen from "./pages/TransactionSearchScreen";
 import TransactionListScreen from "./pages/TransactionListScreen";
 import SavingTransactionListScreen from "./pages/SavingTransactionListScreen";
 import SavingTransactionSearchScreen from "./pages/SavingTransactionSearchScreen";
+import NotificationScreen from "./pages/NotificationScreen";
 
 const App: React.FC = () => {
   return (
@@ -47,6 +48,8 @@ const App: React.FC = () => {
           path="/savings/transactions/search"
           element={<SavingTransactionSearchScreen />}
         />
+
+        <Route path="/notifications" element={<NotificationScreen />} />
 
         <Route element={<AppShell />}>
           <Route path="/dashboard" element={<DashboardScreen />} />

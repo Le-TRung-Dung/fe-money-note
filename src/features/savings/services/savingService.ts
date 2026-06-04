@@ -4,6 +4,7 @@ import type {
   SavingTransactionType,
 } from "../../../database/db";
 import { createId } from "../../../shared/utils/id";
+import { notifyFirstSavingDeposit } from "../../notifications/services/notificationService";
 
 export async function getSavingWalletByUser(userId: string) {
   const wallet = await db.wallets
@@ -89,6 +90,10 @@ export async function createSavingTransaction(payload: {
     await db.savingTransactions.add(savingTransaction);
   });
 
+  if (payload.type === "deposit") {
+    await notifyFirstSavingDeposit(payload.userId);
+  }
+
   return savingTransaction;
 }
 
@@ -102,7 +107,7 @@ export async function updateSavingTransaction(
     note?: string;
     description?: string;
     date: string;
-  }
+  },
 ) {
   const oldTransaction = await db.savingTransactions.get(id);
 

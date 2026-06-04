@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { message, Skeleton } from "antd";
+import { Badge, message, Skeleton } from "antd";
 import {
   BellOutlined,
   RightOutlined,
@@ -15,6 +15,12 @@ import { STORAGE_KEYS } from "../shared/constants/storageKeys";
 import { formatMoney } from "../shared/utils/formatMoney";
 import { getDashboardSummary } from "../features/dashboard/services/dashboardService";
 import logo from "../assets/logo.png";
+import {
+  checkInactiveNotification,
+  createFunNotificationSometimes,
+  ensureWelcomeNotification,
+  getUnreadNotificationCount,
+} from "../features/notifications/services/notificationService";
 
 const formatCompactMoney = (num: number) => {
   if (num >= 1000000) return (num / 1000000).toFixed(1).replace(".0", "") + "M";
@@ -26,6 +32,7 @@ const DashboardScreen: React.FC = () => {
   const navigate = useNavigate();
   const [pageLoading, setPageLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const currentUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
 
@@ -41,6 +48,12 @@ const DashboardScreen: React.FC = () => {
 
       const summaryData = await getDashboardSummary(currentUserId);
       setData(summaryData);
+      await ensureWelcomeNotification(currentUserId);
+      await checkInactiveNotification(currentUserId);
+      await createFunNotificationSometimes(currentUserId);
+
+      const count = await getUnreadNotificationCount(currentUserId);
+      setUnreadCount(count);
     } catch (error) {
       message.error(
         error instanceof Error ? error.message : "Không thể tải dữ liệu",
@@ -131,8 +144,13 @@ const DashboardScreen: React.FC = () => {
             <img src={logo} className="h-[59px]" />
           </div>
           <div className="relative">
-            <div className="w-10 h-10 mr-5 rounded-full bg-white/60 backdrop-blur-md flex items-center justify-center border border-white shadow-sm">
-              <BellOutlined className="text-xl text-gray-700" />
+            <div
+              onClick={() => navigate("/notifications")}
+              className="w-10 h-10 mr-5 rounded-full bg-white/60 backdrop-blur-md flex items-center justify-center border border-white shadow-sm cursor-pointer"
+            >
+              <Badge count={unreadCount} size="small">
+                <BellOutlined className="text-xl text-gray-700" />
+              </Badge>
             </div>
           </div>
         </div>
