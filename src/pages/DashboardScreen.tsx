@@ -141,12 +141,12 @@ const DashboardScreen: React.FC = () => {
             onClick={() => navigate("/landing")}
             className="flex items-center gap-2"
           >
-            <img src={logo} className="h-[59px]" />
+            <img src={logo} className="h-[40px]" />
           </div>
           <div className="relative">
             <div
               onClick={() => navigate("/notifications")}
-              className="w-10 h-10 mr-5 rounded-full bg-white/60 backdrop-blur-md flex items-center justify-center border border-white shadow-sm cursor-pointer"
+              className="w-10 h-10 rounded-full bg-white/60 backdrop-blur-md flex items-center justify-center border border-white shadow-sm cursor-pointer"
             >
               <Badge count={unreadCount} size="small">
                 <BellOutlined className="text-xl text-gray-700" />
