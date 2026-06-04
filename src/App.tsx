@@ -19,37 +19,40 @@ import TransactionListScreen from "./pages/TransactionListScreen";
 import SavingTransactionListScreen from "./pages/SavingTransactionListScreen";
 import SavingTransactionSearchScreen from "./pages/SavingTransactionSearchScreen";
 import NotificationScreen from "./pages/NotificationScreen";
+import PublicShell from "./components/PublicShell";
 
 const App: React.FC = () => {
   return (
     <>
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<SplashScreen />} />
+        <Route element={<PublicShell />}>
+          <Route path="/" element={<SplashScreen />} />
 
-        <Route path="/about" element={<About />} />
-        <Route path="/landing" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
-        <Route
-          path="/transactions/create"
-          element={<TransactionCreateScreen />}
-        />
-        <Route
-          path="/transactions/:id/edit"
-          element={<TransactionCreateScreen />}
-        />
-        <Route
-          path="/transactions/search"
-          element={<TransactionSearchScreen />}
-        />
-        <Route
-          path="/savings/transactions/search"
-          element={<SavingTransactionSearchScreen />}
-        />
+          <Route path="/about" element={<About />} />
+          <Route path="/landing" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
+          <Route
+            path="/transactions/create"
+            element={<TransactionCreateScreen />}
+          />
+          <Route
+            path="/transactions/:id/edit"
+            element={<TransactionCreateScreen />}
+          />
+          <Route
+            path="/transactions/search"
+            element={<TransactionSearchScreen />}
+          />
+          <Route
+            path="/savings/transactions/search"
+            element={<SavingTransactionSearchScreen />}
+          />
 
-        <Route path="/notifications" element={<NotificationScreen />} />
+          <Route path="/notifications" element={<NotificationScreen />} />
+        </Route>
 
         <Route element={<AppShell />}>
           <Route path="/dashboard" element={<DashboardScreen />} />
