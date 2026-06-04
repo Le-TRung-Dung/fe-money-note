@@ -1,6 +1,7 @@
 import { db } from "../../../database/db";
 import type { SavingGoal } from "../../../database/db";
 import { createId } from "../../../shared/utils/id";
+import { notifyFirstSavingGoal } from "../../notifications/services/notificationService";
 
 export type CreateSavingGoalPayload = {
   userId: string;
@@ -51,6 +52,8 @@ export async function createSavingGoal(payload: CreateSavingGoalPayload) {
   };
 
   await db.savingGoals.add(goal);
+
+  await notifyFirstSavingGoal(payload.userId);
 
   return goal;
 }
