@@ -166,28 +166,28 @@ function TransactionListScreen() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F7F9FF] p-5">
+      <div className="bg-[#F7F9FF] p-5 pt-8">
         <Skeleton active avatar paragraph={{ rows: 8 }} />
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#F7F9FF] pb-28 font-sans">
+    <div className="relative overflow-x-hidden bg-[#F7F9FF] font-sans">
       <div className="pointer-events-none absolute left-0 top-0 h-64 w-64 -translate-x-1/3 -translate-y-1/3 rounded-full bg-[#E0E7FF] opacity-70 blur-[80px]" />
       <div className="pointer-events-none absolute right-0 top-20 h-72 w-72 translate-x-1/3 rounded-full bg-[#F3E8FF] opacity-60 blur-[80px]" />
 
-      <div className="relative z-10 mx-auto max-w-[760px] px-5 pt-8">
+      <div className="relative z-10 mx-auto max-w-[760px] px-5 pb-6 pt-8">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <ArrowLeftOutlined
-            className="text-xl cursor-pointer text-[#111438]"
+            className="cursor-pointer text-xl text-[#111438]"
             onClick={() => navigate("/dashboard")}
           />
           <h1 className="m-0 text-lg font-black text-[#111438]">
             Sổ giao dịch
           </h1>
-          <QuestionCircleOutlined className="text-xl cursor-pointer text-[#111438]" />
+          <QuestionCircleOutlined className="cursor-pointer text-xl text-[#111438]" />
         </div>
 
         {/* Balance & Chart */}
@@ -209,7 +209,7 @@ function TransactionListScreen() {
         <div className="mb-6 mt-8 flex gap-3">
           <div
             onClick={() => navigate("/transactions/search")}
-            className="flex flex-1 cursor-pointer items-center gap-3 rounded-2xl border border-gray-50 bg-white px-4 py-3.5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition hover:bg-gray-50"
+            className="flex flex-1 cursor-pointer items-center gap-3 rounded-2xl border border-gray-50 bg-white px-3 py-2 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition hover:bg-gray-50"
           >
             <SearchOutlined className="text-lg text-gray-400" />
             <span className="text-[14px] font-medium text-gray-400">
@@ -219,7 +219,7 @@ function TransactionListScreen() {
 
           <div
             onClick={openFilterModal}
-            className="flex cursor-pointer items-center gap-2 rounded-2xl border border-gray-50 bg-white px-4 py-3.5 font-bold text-gray-700 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition hover:bg-gray-50"
+            className="flex cursor-pointer items-center gap-2 rounded-2xl border border-gray-50 bg-white px-3 py-2 font-bold text-gray-700 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition hover:bg-gray-50"
           >
             <FilterOutlined /> Lọc
           </div>
@@ -301,117 +301,125 @@ function TransactionListScreen() {
         centered
         className="custom-modal"
       >
-        <div className="flex flex-col gap-6 pt-4">
-          <div>
-            <div className="mb-3 text-sm font-bold text-gray-700">
-              Thời gian danh sách
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {rangeOptions.map((opt) => (
-                <div
-                  key={opt.value}
-                  onClick={() => setDraftRange(opt.value)}
-                  className={`cursor-pointer rounded-xl px-4 py-2 text-[13px] transition-colors ${
-                    draftRange === opt.value
-                      ? "bg-[#895BFF] font-bold text-white shadow-md"
-                      : "bg-gray-100 font-medium text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {opt.label}
-                </div>
-              ))}
-            </div>
-
-            {draftRange === "customMonth" && (
-              <div className="mt-3">
-                <DatePicker
-                  picker="month"
-                  className="h-11 w-full rounded-xl"
-                  value={dayjs(`${draftSelectedMonth}-01`)}
-                  format="MM/YYYY"
-                  placeholder="Chọn tháng"
-                  onChange={(value) => {
-                    if (!value) return;
-                    setDraftSelectedMonth(value.format("YYYY-MM"));
-                  }}
-                />
+        {/* LOGIC MỚI BẮT ĐẦU TỪ ĐÂY: Tách nội dung cuộn và nút Áp dụng */}
+        <div className="flex flex-col pt-2">
+          
+          {/* Vùng chỉ cuộn các Options, giới hạn cao 60% màn hình */}
+          <div className="custom-scrollbar flex max-h-[60dvh] flex-col gap-6 overflow-y-auto pr-2 pb-4">
+            <div>
+              <div className="mb-3 text-sm font-bold text-gray-700">
+                Thời gian danh sách
               </div>
-            )}
 
-            {draftRange === "customYear" && (
-              <div className="mt-3">
-                <DatePicker
-                  picker="year"
-                  className="h-11 w-full rounded-xl"
-                  value={dayjs(`${draftSelectedYear}-01-01`)}
-                  format="YYYY"
-                  placeholder="Chọn năm"
-                  onChange={(value) => {
-                    if (!value) return;
-                    setDraftSelectedYear(value.format("YYYY"));
-                  }}
-                />
+              <div className="flex flex-wrap gap-2">
+                {rangeOptions.map((opt) => (
+                  <div
+                    key={opt.value}
+                    onClick={() => setDraftRange(opt.value)}
+                    className={`cursor-pointer rounded-xl px-4 py-2 text-[13px] transition-colors ${
+                      draftRange === opt.value
+                        ? "bg-[#895BFF] font-bold text-white shadow-md"
+                        : "bg-gray-100 font-medium text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {opt.label}
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
 
-          <div>
-            <div className="mb-3 text-sm font-bold text-gray-700">
-              Loại giao dịch
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {typeOptions.map((opt) => (
-                <div
-                  key={opt.value}
-                  onClick={() => {
-                    setDraftType(opt.value);
-                    setDraftCategoryId("all");
-                  }}
-                  className={`cursor-pointer rounded-xl px-4 py-2 text-[13px] transition-colors ${
-                    draftType === opt.value
-                      ? "bg-[#895BFF] font-bold text-white shadow-md"
-                      : "bg-gray-100 font-medium text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {opt.label}
+              {draftRange === "customMonth" && (
+                <div className="mt-3">
+                  <DatePicker
+                    picker="month"
+                    className="h-11 w-full rounded-xl"
+                    value={dayjs(`${draftSelectedMonth}-01`)}
+                    format="MM/YYYY"
+                    placeholder="Chọn tháng"
+                    onChange={(value) => {
+                      if (!value) return;
+                      setDraftSelectedMonth(value.format("YYYY-MM"));
+                    }}
+                  />
                 </div>
-              ))}
-            </div>
-          </div>
+              )}
 
-          <div>
-            <div className="mb-3 text-sm font-bold text-gray-700">
-              Nhóm chi tiêu
-            </div>
-
-            <div className="custom-scrollbar flex max-h-48 flex-wrap gap-2 overflow-y-auto pb-2">
-              {draftCategoryOptions.map((opt) => (
-                <div
-                  key={opt.value}
-                  onClick={() => setDraftCategoryId(opt.value)}
-                  className={`cursor-pointer rounded-xl border px-4 py-2 text-[13px] transition-colors ${
-                    draftCategoryId === opt.value
-                      ? "border-[#895BFF] bg-[#F0EEFF] font-bold text-[#895BFF]"
-                      : "border-transparent bg-gray-100 font-medium text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {opt.label}
+              {draftRange === "customYear" && (
+                <div className="mt-3">
+                  <DatePicker
+                    picker="year"
+                    className="h-11 w-full rounded-xl"
+                    value={dayjs(`${draftSelectedYear}-01-01`)}
+                    format="YYYY"
+                    placeholder="Chọn năm"
+                    onChange={(value) => {
+                      if (!value) return;
+                      setDraftSelectedYear(value.format("YYYY"));
+                    }}
+                  />
                 </div>
-              ))}
+              )}
+            </div>
+
+            <div>
+              <div className="mb-3 text-sm font-bold text-gray-700">
+                Loại giao dịch
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {typeOptions.map((opt) => (
+                  <div
+                    key={opt.value}
+                    onClick={() => {
+                      setDraftType(opt.value);
+                      setDraftCategoryId("all");
+                    }}
+                    className={`cursor-pointer rounded-xl px-4 py-2 text-[13px] transition-colors ${
+                      draftType === opt.value
+                        ? "bg-[#895BFF] font-bold text-white shadow-md"
+                        : "bg-gray-100 font-medium text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {opt.label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-3 text-sm font-bold text-gray-700">
+                Nhóm chi tiêu
+              </div>
+
+              {/* Phần nhóm chi tiêu vẫn giữ nguyên max-h-48 để tự cuộn riêng */}
+              <div className="custom-scrollbar flex max-h-48 flex-wrap gap-2 overflow-y-auto pb-2 pr-1">
+                {draftCategoryOptions.map((opt) => (
+                  <div
+                    key={opt.value}
+                    onClick={() => setDraftCategoryId(opt.value)}
+                    className={`cursor-pointer rounded-xl border px-4 py-2 text-[13px] transition-colors ${
+                      draftCategoryId === opt.value
+                        ? "border-[#895BFF] bg-[#F0EEFF] font-bold text-[#895BFF]"
+                        : "border-transparent bg-gray-100 font-medium text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {opt.label}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          <Button
-            type="primary"
-            size="large"
-            className="mt-2 h-12 rounded-[16px] border-none bg-[#895BFF] font-bold shadow-[0_8px_20px_rgba(137,91,255,0.25)]"
-            onClick={handleApplyFilter}
-            block
-          >
-            Áp dụng
-          </Button>
+          {/* Nút Áp dụng được đẩy ra ngoài vùng cuộn, nằm cố định ở đáy */}
+          <div className="mt-2 border-t border-gray-100 pt-4">
+            <Button
+              type="primary"
+              size="large"
+              className="h-12 w-full rounded-[16px] border-none bg-[#895BFF] font-bold shadow-[0_8px_20px_rgba(137,91,255,0.25)]"
+              onClick={handleApplyFilter}
+            >
+              Áp dụng
+            </Button>
+          </div>
         </div>
       </Modal>
 

@@ -178,7 +178,7 @@ function SavingScreen() {
                 ) : (
                   <ArrowUpOutlined className="text-[10px]" />
                 )}
-                {diffPercentText} so với tháng trước
+                {diffPercentText} với tháng trước
               </div>
             )}
           </div>

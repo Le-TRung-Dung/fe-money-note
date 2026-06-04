@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Empty, Input, Spin, message } from "antd"; // Thay Skeleton bằng Spin
+import { Empty, Input, Spin, message } from "antd";
 import { ArrowLeftOutlined, SearchOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -41,7 +41,13 @@ function TransactionSearchScreen() {
         keyword: value,
       });
 
-      setResults(data);
+      // LOGIC MỚI: Nếu không có từ khóa, chỉ lấy 10 giao dịch đầu tiên để chống lag
+      if (!value.trim()) {
+        setResults(data.slice(0, 10));
+      } else {
+        setResults(data);
+      }
+      
     } catch (error) {
       message.error(
         error instanceof Error ? error.message : "Không thể tìm kiếm"
@@ -52,110 +58,120 @@ function TransactionSearchScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F9FF] px-5 py-8 pb-32">
-      <div className="mx-auto max-w-[760px]">
-        <div className="mb-5 flex items-center gap-3">
-          <button
-            onClick={() => navigate("/transactions")}
-            className="flex h-10 w-10 items-center justify-center rounded-full border-none bg-white text-[#111438] shadow-sm"
-          >
-            <ArrowLeftOutlined />
-          </button>
+    <div className="bg-[#F7F9FF]">
+      
+      {/* 1. HEADER (Sticky cố định lên Top) */}
+      <div className="sticky top-0 z-20 bg-[#F7F9FF] px-5 pb-3 pt-8 shadow-[0_4px_10px_-4px_rgba(0,0,0,0.05)]">
+        <div className="mx-auto max-w-[760px]">
+          <div className="mb-5 flex items-center gap-3">
+            <button
+              onClick={() => navigate("/transactions")}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-none bg-white text-[#111438] shadow-sm"
+            >
+              <ArrowLeftOutlined />
+            </button>
 
-          <Input
-            autoFocus
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
-            prefix={<SearchOutlined className="text-gray-400" />}
-            placeholder="Tìm theo nhóm, ghi chú, mô tả, với ai..."
-            className="h-12 rounded-2xl"
-            allowClear
-          />
-        </div>
-
-        <div className="mb-4 text-sm font-medium text-gray-400">
-          {keyword
-            ? `Tìm thấy ${results.length} kết quả`
-            : "Nhập từ khóa để tìm giao dịch"}
-        </div>
-
-        {/* Hiển thị xoay xoay (Spinner) ở giữa khi đang loading */}
-        {loading && (
-          <div className="mt-20 flex justify-center">
-            <Spin size="large" />
+            <Input
+              autoFocus
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
+              prefix={<SearchOutlined className="text-gray-400" />}
+              placeholder="Tìm theo nhóm, ghi chú, mô tả, với ai..."
+              className="h-12 rounded-2xl"
+              allowClear
+            />
           </div>
-        )}
 
-        {!loading && results.length === 0 && (
-          <div className="mt-20">
-            <Empty description="Không tìm thấy giao dịch phù hợp" />
+          <div className="text-sm font-medium text-gray-400">
+            {/* LOGIC MỚI: Đổi text hiển thị khi chưa gõ tìm kiếm */}
+            {keyword.trim()
+              ? `Tìm thấy ${results.length} kết quả`
+              : "10 giao dịch gần nhất"}
           </div>
-        )}
+        </div>
+      </div>
 
-        {!loading && results.length > 0 && (
-          <div className="rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
-            <div className="flex flex-col gap-3">
-              {results.map((tx) => {
-                const isIncome = tx.type === "income";
-                const isExpense = tx.type === "expense";
+      {/* 2. KHU VỰC DANH SÁCH BÊN DƯỚI */}
+      <div className="px-5 pb-6 pt-4">
+        <div className="mx-auto max-w-[760px]">
+          
+          {loading && (
+            <div className="mt-10 flex justify-center">
+              <Spin size="large" />
+            </div>
+          )}
 
-                const color = isIncome
-                  ? "#22C55E"
-                  : isExpense
+          {!loading && results.length === 0 && (
+            <div className="mt-10">
+              <Empty description="Không tìm thấy giao dịch phù hợp" />
+            </div>
+          )}
+
+          {!loading && results.length > 0 && (
+            <div className="rounded-[24px] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
+              <div className="flex flex-col gap-3">
+                {results.map((tx) => {
+                  const isIncome = tx.type === "income";
+                  const isExpense = tx.type === "expense";
+
+                  const color = isIncome
+                    ? "#22C55E"
+                    : isExpense
                     ? "#EF4444"
                     : "#895BFF";
 
-                const prefix = isIncome ? "+" : isExpense ? "-" : "";
+                  const prefix = isIncome ? "+" : isExpense ? "-" : "";
 
-                return (
-                  <div
-                    key={tx.id}
-                    onClick={() => navigate(`/transactions/${tx.id}/edit`)}
-                    className="flex cursor-pointer items-center justify-between rounded-2xl bg-[#FAFAFF] px-3 py-3 transition hover:bg-[#F0EEFF]"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="flex h-11 w-11 items-center justify-center rounded-full text-lg"
-                        style={{
-                          backgroundColor: `${tx.category?.color || color}18`,
-                        }}
-                      >
-                        {tx.category?.icon || "✨"}
-                      </div>
-
-                      <div>
-                        <div className="text-[14px] font-bold text-[#111438]">
-                          {tx.note || tx.category?.name || "Giao dịch"}
-                        </div>
-
-                        <div className="mt-0.5 text-xs text-gray-400">
-                          {tx.category?.name || "Không rõ nhóm"} ·{" "}
-                          {dayjs(tx.date).format("DD/MM/YYYY")} ·{" "}
-                          {dayjs(tx.createdAt).format("HH:mm")}
-                        </div>
-
-                        {tx.partner && (
-                          <div className="mt-0.5 text-xs text-gray-400">
-                            Với: {tx.partner}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
+                  return (
                     <div
-                      className="whitespace-nowrap text-[14px] font-black"
-                      style={{ color }}
+                      key={tx.id}
+                      onClick={() => navigate(`/transactions/${tx.id}/edit`)}
+                      className="flex cursor-pointer items-center justify-between rounded-2xl bg-[#FAFAFF] px-3 py-3 transition hover:bg-[#F0EEFF]"
                     >
-                      {prefix}
-                      {formatMoney(tx.amount)}
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg"
+                          style={{
+                            backgroundColor: `${tx.category?.color || color}18`,
+                          }}
+                        >
+                          {tx.category?.icon || "✨"}
+                        </div>
+
+                        <div>
+                          <div className="text-[14px] font-bold text-[#111438]">
+                            {tx.category?.name || "Không rõ nhóm"}
+                          </div>
+
+                          <div className="mt-0.5 text-xs text-gray-400">
+                            {dayjs(tx.date).format("DD/MM/YYYY")} ·{" "}
+                            {dayjs(tx.createdAt).format("HH:mm")}
+                          </div>
+
+                          {tx.partner && (
+                            <div className="mt-0.5 text-xs text-gray-400">
+                              Với: {tx.partner}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div
+                        className="whitespace-nowrap text-[14px] font-black"
+                        style={{ color }}
+                      >
+                        {prefix}
+                        {formatMoney(tx.amount)}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   Select,
   Typography,
   message,
+  Spin,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -77,6 +78,7 @@ function TransactionCreateScreen() {
   const currentUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
 
   const [loading, setLoading] = useState(false);
+  const [successLoading, setSuccessLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -164,7 +166,6 @@ function TransactionCreateScreen() {
         clearTimeout(focusTimer);
       }
 
-      // Đợi bàn phím mở xong rồi mới scroll 1 lần
       focusTimer = setTimeout(() => {
         scrollToFocusedInput();
       }, 350);
@@ -306,26 +307,7 @@ function TransactionCreateScreen() {
 
       setLoading(true);
 
-      if (isEditMode && id) {
-        await updateTransaction(id, {
-          userId: currentUserId,
-          walletId: wallet.id,
-          type: values.type,
-          debtType: values.debtType,
-          categoryId: values.categoryId,
-          amount: values.amount,
-          note: values.note,
-          description: values.description,
-          partner: values.partner,
-          date: values.date.format("YYYY-MM-DD"),
-        });
-
-        message.success("Đã cập nhật giao dịch");
-        navigate("/dashboard");
-        return;
-      }
-
-      await createTransaction({
+      const transactionPayload = {
         userId: currentUserId,
         walletId: wallet.id,
         type: values.type,
@@ -336,11 +318,23 @@ function TransactionCreateScreen() {
         description: values.description,
         partner: values.partner,
         date: values.date.format("YYYY-MM-DD"),
-      });
+      };
 
-      message.success("Đã lưu giao dịch");
+      if (isEditMode && id) {
+        await updateTransaction(id, transactionPayload);
+      } else {
+        await createTransaction(transactionPayload);
+      }
+
+      setLoading(false);
+      setSuccessLoading(true);
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      message.success(isEditMode ? "Đã cập nhật giao dịch" : "Đã lưu giao dịch");
       navigate("/dashboard");
     } catch (error) {
+      setLoading(false);
       message.error(
         error instanceof Error
           ? error.message
@@ -348,8 +342,6 @@ function TransactionCreateScreen() {
             ? "Cập nhật giao dịch thất bại"
             : "Lưu giao dịch thất bại",
       );
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -1055,6 +1047,15 @@ function TransactionCreateScreen() {
           }
         }
       `}</style>
+
+      {successLoading && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm transition-all duration-300">
+          <Spin size="large" />
+          <div className="mt-4 text-[15px] font-semibold text-[#5B62FF] animate-pulse">
+            Đang hoàn tất...
+          </div>
+        </div>
+      )}
 
       <CategoryCreateModal
         open={categoryModalOpen}

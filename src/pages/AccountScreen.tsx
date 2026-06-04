@@ -79,17 +79,18 @@ function AccountScreen() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F7F9FF] p-5 flex items-center justify-center">
-        <Skeleton active avatar paragraph={{ rows: 6 }} />
+      <div className="p-5 pt-20 flex justify-center">
+        <div className="w-full max-w-[480px]">
+          <Skeleton active avatar paragraph={{ rows: 6 }} />
+        </div>
       </div>
     );
   }
 
   return (
-    // Thêm pb-24 (padding-bottom: 6rem) để nội dung không bị che bởi Bottom Nav chung
-    <div className="min-h-screen bg-[#F7F9FF] font-sans text-[#1A1C29]">
-      <div className="mx-auto max-w-[480px] bg-[#F7F9FF] min-h-screen relative">
-        {/* Header */}
+    <div className="font-sans text-[#1A1C29]">
+      <div className="mx-auto max-w-[480px] relative">
+        {/* Header - Có thể bỏ nếu không dùng đến */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4"></div>
 
         <div className="px-5">
@@ -124,12 +125,6 @@ function AccountScreen() {
               Cài đặt
             </h3>
             <div className="bg-white rounded-[24px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden">
-              {/* <MenuRow
-                icon={<UserOutlined />}
-                title="Thông tin cá nhân"
-                subtitle="Cập nhật thông tin của bạn"
-                onClick={() => navigate("/profile")}
-              /> */}
               <MenuRow
                 icon={<FaLock />}
                 title="Bảo mật"
@@ -149,12 +144,6 @@ function AccountScreen() {
               Tài khoản
             </h3>
             <div className="bg-white rounded-[24px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden">
-              {/* <MenuRow
-                icon={<SwapOutlined />}
-                title="Đổi tài khoản"
-                subtitle="Chuyển sang tài khoản khác"
-                onClick={() => {}}
-              /> */}
               <MenuRow
                 icon={<LogoutOutlined />}
                 title="Đăng xuất"

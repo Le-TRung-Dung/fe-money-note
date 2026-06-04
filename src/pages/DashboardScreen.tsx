@@ -429,7 +429,10 @@ const DashboardScreen: React.FC = () => {
             <div className="text-[16px] font-bold text-[#111438]">
               Giao dịch gần đây
             </div>
-            <div className="text-[13px] font-semibold text-[#895BFF] cursor-pointer hover:underline">
+            <div
+              className="text-[13px] font-semibold text-[#895BFF] cursor-pointer hover:underline"
+              onClick={() => navigate("/transactions")}
+            >
               Xem tất cả
             </div>
           </div>
