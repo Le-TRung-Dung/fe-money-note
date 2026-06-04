@@ -168,7 +168,6 @@ function SavingScreen() {
           <div className="relative z-10 flex items-center justify-between mb-4">
             <div className="flex items-center gap-2 rounded-xl bg-white/20 px-3 py-1.5 text-xs font-medium backdrop-blur-md">
               Tháng {dayjs().format("M/YYYY")}{" "}
-              <ArrowDownOutlined className="text-[10px]" />
             </div>
 
             {/* Logic render % tăng giảm ở đây */}
