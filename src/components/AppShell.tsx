@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import BottomNav from "./BottomNav";
+import OnboardingModal from "../Modal/OnboardingModal";
 
 function AppShell() {
   return (
@@ -11,6 +12,7 @@ function AppShell() {
       </div>
 
       <BottomNav />
+      <OnboardingModal />
     </div>
   );
 }
