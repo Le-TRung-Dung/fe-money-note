@@ -4,8 +4,11 @@ import OnboardingModal from "../Modal/OnboardingModal";
 
 function AppShell() {
   return (
-    <div className="fixed inset-0 flex h-[100dvh] w-full flex-col overflow-hidden bg-[#F7F9FF]">
-      <main className="app-scroll relative flex-1 overflow-y-auto pb-28">
+    <div
+      className="flex w-full flex-col bg-[#F7F9FF]"
+      style={{ minHeight: "100svh" }}
+    >
+      <main className="app-scroll flex-1 pb-28">
         <Outlet />
       </main>
 

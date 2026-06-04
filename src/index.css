@@ -6,17 +6,18 @@ html,
 body,
 #root {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
   background: #f7f9ff;
-  overscroll-behavior: none;
+}
+
+html {
+  overscroll-behavior-y: none;
 }
 
 body {
-  position: fixed;
-  inset: 0;
+  overflow-x: hidden;
 }
 
 * {
@@ -25,6 +26,6 @@ body {
 }
 
 .app-scroll {
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
