@@ -87,15 +87,11 @@ function UnlockScreen() {
   };
 
   return (
-    <div className="relative min-h-[100svh] overflow-x-hidden bg-[#FAFAFF] px-5 py-8">
+    <div className="fixed inset-0 overflow-hidden bg-[#FAFAFF] px-5 py-8">
       <div className="pointer-events-none absolute -right-28 -top-28 h-80 w-80 rounded-full bg-[#D7C8FF] opacity-70 blur-2xl" />
       <div className="pointer-events-none absolute -left-28 bottom-10 h-72 w-72 rounded-full bg-[#DDEAFF] opacity-80 blur-2xl" />
 
-      <div className="relative z-10 flex min-h-[100svh] max-w-[520px] flex-col justify-center py-6">
-        <div className="mb-5 flex justify-center">
-          <img src={logo} alt="Money Note" className="h-[90px]" />
-        </div>
-
+      <div className="relative z-10 mx-auto flex h-full max-w-[520px] flex-col justify-center">
         <Card
           className="rounded-[36px] border-none bg-white/95 px-3 py-4 shadow-[0_26px_70px_rgba(91,98,255,0.13)]"
           style={{
