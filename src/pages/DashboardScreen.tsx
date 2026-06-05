@@ -264,7 +264,7 @@ const DashboardScreen: React.FC = () => {
               )}
             </div>
 
-            <div className="flex flex-col gap-3 flex-1 ml-6">
+            <div className="flex flex-col gap-3 flex-1 ml-4">
               <div className="flex justify-between items-center text-[13px]">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-[#4ADE80]"></div>
@@ -380,7 +380,7 @@ const DashboardScreen: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-[13px] text-gray-500 mb-0.5">
-                    Chi tiêu nhiều nhất tuần
+                    Chi nhiều nhất tuần
                   </div>
                   <div className="text-[16px] font-bold text-[#111438]">
                     {data.topExpenseThisWeek[0].categoryName}
@@ -476,7 +476,7 @@ const DashboardScreen: React.FC = () => {
                   <div
                     key={tx.id}
                     onClick={() => navigate(`/transactions/${tx.id}/edit`)}
-                    className="flex cursor-pointer items-center justify-between rounded-2xl px-2 py-3 border-b border-gray-100 last:border-0 last:pb-3 hover:bg-[#F7F8FF] transition"
+                    className="flex cursor-pointer items-center justify-between rounded-2xl border-b border-gray-100 last:border-0 last:pb-3 hover:bg-[#F7F8FF] transition"
                   >
                     <div className="flex items-center gap-3">
                       <div

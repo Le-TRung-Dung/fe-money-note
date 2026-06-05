@@ -235,7 +235,7 @@ function SavingTransactionListScreen() {
                       Tổng {isPositive ? "gửi" : "rút"}:{" "}
                       <span
                         className={
-                          isPositive ? "text-[#22C55E]" : "text-[#EF4444]"
+                          isPositive ? "text-[#22C55E]" : "text-[#EF4444] ml-1"
                         }
                       >
                         {isPositive ? "+" : ""}
