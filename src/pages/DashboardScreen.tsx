@@ -489,7 +489,7 @@ const DashboardScreen: React.FC = () => {
                       </div>
 
                       <div>
-                        <div className="font-bold text-[#111438] text-[14px]">
+                        <div className="text-[#111438] text-[14px]">
                           {tx.note || tx.category?.name || "Giao dịch"}
                         </div>
                         <div className="text-[12px] text-gray-400 mt-0.5">
