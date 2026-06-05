@@ -17,6 +17,7 @@ import {
   verifyCurrentUserPassword,
 } from "../features/auth/services/authService";
 import type { User } from "../database/db";
+import { FaLock } from "react-icons/fa";
 
 const { Title, Text } = Typography;
 
@@ -90,7 +91,7 @@ function UnlockScreen() {
       <div className="pointer-events-none absolute -right-28 -top-28 h-80 w-80 rounded-full bg-[#D7C8FF] opacity-70 blur-2xl" />
       <div className="pointer-events-none absolute -left-28 bottom-10 h-72 w-72 rounded-full bg-[#DDEAFF] opacity-80 blur-2xl" />
 
-      <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-[520px] flex-col justify-center py-6">
+      <div className="relative z-10 flex min-h-[100svh] max-w-[520px] flex-col justify-center py-6">
         <div className="mb-5 flex justify-center">
           <img src={logo} alt="Money Note" className="h-[90px]" />
         </div>
@@ -103,16 +104,12 @@ function UnlockScreen() {
         >
           <div className="mb-7 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#F0EEFF] text-[#895BFF]">
-              <LockOutlined className="text-3xl" />
+              <FaLock className="text-3xl" />
             </div>
 
             <Title level={2} style={{ marginBottom: 8, color: "#111438" }}>
               Mở khóa ứng dụng
             </Title>
-
-            <Text type="secondary">
-              Nhập mật khẩu để tiếp tục sử dụng Money Note
-            </Text>
 
             {user && (
               <div className="mt-3 text-sm font-bold text-[#895BFF]">
@@ -141,7 +138,7 @@ function UnlockScreen() {
               <Input.Password
                 autoFocus
                 placeholder="Nhập mật khẩu"
-                prefix={<LockOutlined className="mr-2 text-[#895BFF]" />}
+                prefix={<FaLock className="mr-2 text-[#895BFF]" />}
                 className="unlock-input"
                 iconRender={(visible) =>
                   visible ? (
@@ -179,7 +176,7 @@ function UnlockScreen() {
 
       <style>{`
         .unlock-input.ant-input-affix-wrapper {
-          height: 54px;
+          height: 50px;
           border-radius: 18px;
           border: 1.5px solid #E3E6F5;
           padding: 0 18px;
@@ -193,7 +190,7 @@ function UnlockScreen() {
         }
 
         .unlock-button {
-          height: 54px !important;
+          height: 50px !important;
           border-radius: 18px !important;
           border: none !important;
           background: linear-gradient(90deg, #895BFF 0%, #3453FF 100%) !important;
