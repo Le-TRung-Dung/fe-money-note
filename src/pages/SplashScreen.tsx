@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Spin } from "antd";
 import logo from "../assets/logo.png";
 import { STORAGE_KEYS } from "../shared/constants/storageKeys";
+import {
+  isPasswordUnlocked,
+  isRequirePasswordEnabled,
+} from "../features/auth/services/authService";
 
 function SplashScreen() {
   const navigate = useNavigate();
@@ -11,11 +15,20 @@ function SplashScreen() {
     const timer = setTimeout(() => {
       const currentUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
 
-      if (currentUserId) {
-        navigate("/dashboard", { replace: true });
-      } else {
+      if (!currentUserId) {
         navigate("/landing", { replace: true });
+        return;
       }
+
+      const requirePassword = isRequirePasswordEnabled(currentUserId);
+      const unlocked = isPasswordUnlocked(currentUserId);
+
+      if (requirePassword && !unlocked) {
+        navigate("/unlock", { replace: true });
+        return;
+      }
+
+      navigate("/dashboard", { replace: true });
     }, 1000);
 
     return () => clearTimeout(timer);

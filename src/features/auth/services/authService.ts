@@ -1,6 +1,6 @@
 import { db } from "../../../database/db";
 import { ensureDefaultDataForUser } from "../../../database/seed";
-import { STORAGE_KEYS } from "../../../shared/constants/storageKeys";
+import { getPasswordUnlockedKey, getRequirePasswordKey, STORAGE_KEYS } from "../../../shared/constants/storageKeys";
 import { createId } from "../../../shared/utils/id";
 import { hashPassword } from "../../../shared/utils/password";
 import type { LoginPayload, RegisterPayload } from "../types";
@@ -72,6 +72,7 @@ export async function login(payload: LoginPayload) {
   }
 
   localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, user.id);
+  markPasswordUnlocked(user.id);
 
   return user;
 }
@@ -131,4 +132,47 @@ export async function getCurrentUser() {
   }
 
   return db.users.get(currentUserId);
+}
+
+export function isRequirePasswordEnabled(userId: string) {
+  return localStorage.getItem(getRequirePasswordKey(userId)) === "true";
+}
+
+export function setRequirePassword(userId: string, enabled: boolean) {
+  localStorage.setItem(getRequirePasswordKey(userId), String(enabled));
+
+  if (!enabled) {
+    sessionStorage.removeItem(getPasswordUnlockedKey(userId));
+  }
+}
+
+export function isPasswordUnlocked(userId: string) {
+  return sessionStorage.getItem(getPasswordUnlockedKey(userId)) === "true";
+}
+
+export function markPasswordUnlocked(userId: string) {
+  sessionStorage.setItem(getPasswordUnlockedKey(userId), "true");
+}
+
+export async function verifyCurrentUserPassword(payload: {
+  userId: string;
+  password: string;
+}) {
+  const user = await db.users.get(payload.userId);
+
+  if (!user) {
+    throw new Error("Không tìm thấy tài khoản");
+  }
+
+  const passwordHash = await hashPassword(payload.password);
+
+  if (passwordHash !== user.passwordHash) {
+    throw new Error("Mật khẩu không đúng");
+  }
+
+  return user;
+}
+
+export function clearPasswordUnlocked(userId: string) {
+  sessionStorage.removeItem(getPasswordUnlockedKey(userId));
 }

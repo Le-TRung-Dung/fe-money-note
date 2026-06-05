@@ -21,6 +21,7 @@ import SavingTransactionListScreen from "./pages/SavingTransactionListScreen";
 import SavingTransactionSearchScreen from "./pages/SavingTransactionSearchScreen";
 import NotificationScreen from "./pages/NotificationScreen";
 import TransactionStatisticScreen from "./pages/TransactionStatisticScreen";
+import UnlockScreen from "./pages/UnlockScreen";
 
 const App: React.FC = () => {
   return (
@@ -36,6 +37,7 @@ const App: React.FC = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
+          <Route path="/unlock" element={<UnlockScreen />} />
         </Route>
 
         {/* Màn chính: có BottomNav + Onboarding */}
