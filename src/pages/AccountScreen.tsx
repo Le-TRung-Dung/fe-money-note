@@ -8,7 +8,6 @@ import { getCurrentUser, logout } from "../features/auth/services/authService";
 import { FaLock } from "react-icons/fa";
 import { SiSimpleanalytics } from "react-icons/si";
 
-// Component con để render từng dòng menu cài đặt
 const MenuRow = ({ icon, title, subtitle, onClick, danger = false }: any) => (
   <div
     onClick={onClick}
@@ -88,11 +87,9 @@ function AccountScreen() {
   return (
     <div className="font-sans text-[#1A1C29]">
       <div className="mx-auto max-w-[480px] relative">
-        {/* Header - Có thể bỏ nếu không dùng đến */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4"></div>
 
         <div className="px-5">
-          {/* Profile Card */}
           <div className="bg-white rounded-[24px] p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)] mb-6">
             <div
               className="flex items-center justify-center mb-6 cursor-pointer"
@@ -117,7 +114,6 @@ function AccountScreen() {
             </div>
           </div>
 
-          {/* Cài đặt Group */}
           <div className="mb-6">
             <h3 className="text-[14px] font-bold text-gray-500 mb-3 ml-2">
               Cài đặt
@@ -142,7 +138,6 @@ function AccountScreen() {
             </div>
           </div>
 
-          {/* Tài khoản Group */}
           <div className="mb-6">
             <h3 className="text-[14px] font-bold text-gray-500 mb-3 ml-2">
               Tài khoản
@@ -158,7 +153,6 @@ function AccountScreen() {
             </div>
           </div>
 
-          {/* App Info */}
           <div className="flex justify-center items-center text-gray-400 text-[13px] pb-4">
             Phiên bản 1.0.0
           </div>

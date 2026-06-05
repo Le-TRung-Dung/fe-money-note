@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, DatePicker, Empty, Modal, Skeleton, message } from "antd";
 import {
-  ArrowDownOutlined,
   ArrowLeftOutlined,
   BarChartOutlined,
-  DownloadOutlined,
   FilterOutlined,
   RiseOutlined,
   SwapOutlined,
@@ -21,6 +19,8 @@ import {
   type StatisticRangeType,
   type TransactionStatisticResult,
 } from "../features/statistics/services/transactionStatsService";
+import { FaFileExcel } from "react-icons/fa";
+import { IoWallet } from "react-icons/io5";
 
 const rangeOptions: { label: string; value: StatisticRangeType }[] = [
   { label: "Theo tuần", value: "week" },
@@ -399,7 +399,7 @@ function TransactionStatisticScreen() {
               </div>
             </div>
 
-            <WalletOutlined className="text-xl text-[#895BFF]" />
+            <IoWallet className="text-xl text-[#895BFF]" />
           </div>
 
           {data.transactions.length === 0 ? (
@@ -461,7 +461,7 @@ function TransactionStatisticScreen() {
 
         <Button
           type="primary"
-          icon={<DownloadOutlined />}
+          icon={<FaFileExcel />}
           block
           onClick={handleExportExcel}
           className="h-12 rounded-[18px] border-none bg-[#895BFF] text-[15px] font-black shadow-[0_8px_22px_rgba(137,91,255,0.28)]"
@@ -573,50 +573,6 @@ function TransactionStatisticScreen() {
   );
 }
 
-function SummaryCardLarge({
-  title,
-  description,
-  value,
-  color,
-  icon,
-}: {
-  title: string;
-  description: string;
-  value: number;
-  color: string;
-  icon: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-[26px] bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <div className="text-[13px] font-semibold text-gray-400">{title}</div>
-          <div className="mt-1 text-[12px] font-medium text-gray-400">
-            {description}
-          </div>
-        </div>
-
-        <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-lg"
-          style={{
-            backgroundColor: `${color}18`,
-            color,
-          }}
-        >
-          {icon}
-        </div>
-      </div>
-
-      <div
-        className="break-words text-[26px] font-black leading-tight tracking-[-0.5px]"
-        style={{ color }}
-      >
-        {formatMoney(value)}
-      </div>
-    </div>
-  );
-}
-
 function SummaryCardSmall({
   title,
   value,
@@ -689,42 +645,6 @@ function ChartBar({
       }}
     />
   );
-}
-
-function MiniTotal({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number;
-  color: string;
-}) {
-  return (
-    <div className="min-w-0 rounded-xl bg-white px-2 py-2">
-      <div className="text-[11px] font-semibold text-gray-400">{label}</div>
-      <div
-        className="mt-1 break-words text-[12px] font-black leading-tight"
-        style={{ color }}
-      >
-        {formatCompactMoney(value)}
-      </div>
-    </div>
-  );
-}
-
-function formatCompactMoney(value: number) {
-  const absValue = Math.abs(value);
-
-  if (absValue >= 1_000_000_000) {
-    return `${(value / 1_000_000_000).toFixed(1).replace(".0", "")} tỷ`;
-  }
-
-  if (absValue >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(1).replace(".0", "")} triệu`;
-  }
-
-  return formatMoney(value);
 }
 
 function getRangeText(rangeType: StatisticRangeType) {

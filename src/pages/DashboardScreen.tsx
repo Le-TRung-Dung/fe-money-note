@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Badge, message, Skeleton } from "antd";
 import {
   BellOutlined,
-  RightOutlined,
   WalletFilled,
   ArrowUpOutlined,
   ArrowDownOutlined,

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, DatePicker, Empty, Modal, Skeleton, message } from "antd";
+import { Empty, Skeleton, message } from "antd";
 import {
   ArrowDownOutlined,
   ArrowLeftOutlined,
@@ -20,56 +20,24 @@ import type {
 } from "../features/savings/services/savingListService";
 import { getSavingTransactionListData } from "../features/savings/services/savingListService";
 import vi from "../assets/vi.png";
-
-const rangeOptions: { label: string; value: SavingDateRange }[] = [
-  { label: "Hôm nay", value: "today" },
-  { label: "30 ngày", value: "last30days" },
-  { label: "Tuần này", value: "thisWeek" },
-  { label: "Tuần trước", value: "lastWeek" },
-  { label: "Tháng này", value: "thisMonth" },
-  { label: "Theo tháng", value: "customMonth" },
-  { label: "Theo năm", value: "customYear" },
-];
-
-const typeOptions: { label: string; value: SavingTypeFilter }[] = [
-  { label: "Tất cả", value: "all" },
-  { label: "Gửi tiết kiệm", value: "deposit" },
-  { label: "Rút tiết kiệm", value: "withdraw" },
-];
+import { rangeOptions } from "../shared/constants/options";
+import { SavingFilterModal } from "../Modal/SavingFilterModal";
 
 function SavingTransactionListScreen() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-
-  /**
-   * Bộ lọc ĐÃ ÁP DỤNG
-   */
   const [range, setRange] = useState<SavingDateRange>("last30days");
   const [type, setType] = useState<SavingTypeFilter>("all");
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format("YYYY-MM"));
   const [selectedYear, setSelectedYear] = useState(dayjs().format("YYYY"));
-
-  /**
-   * Bộ lọc NHÁP trong modal
-   */
-  const [draftRange, setDraftRange] = useState<SavingDateRange>("last30days");
-  const [draftType, setDraftType] = useState<SavingTypeFilter>("all");
-  const [draftSelectedMonth, setDraftSelectedMonth] = useState(
-    dayjs().format("YYYY-MM"),
-  );
-  const [draftSelectedYear, setDraftSelectedYear] = useState(
-    dayjs().format("YYYY"),
-  );
 
   const [walletBalance, setWalletBalance] = useState(0);
   const [transactions, setTransactions] = useState<SavingTransaction[]>([]);
 
   const [totalDeposit, setTotalDeposit] = useState(0);
   const [totalWithdraw, setTotalWithdraw] = useState(0);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [netSaving, setNetSaving] = useState(0);
 
   const currentUserId = localStorage.getItem(STORAGE_KEYS.CURRENT_USER_ID);
 
@@ -99,7 +67,6 @@ function SavingTransactionListScreen() {
       setTransactions(data.transactions);
       setTotalDeposit(data.totalDepositInRange);
       setTotalWithdraw(data.totalWithdrawInRange);
-      setNetSaving(data.netSavingInRange);
     } catch (error) {
       message.error(
         error instanceof Error
@@ -111,19 +78,16 @@ function SavingTransactionListScreen() {
     }
   };
 
-  const openFilterModal = () => {
-    setDraftRange(range);
-    setDraftType(type);
-    setDraftSelectedMonth(selectedMonth);
-    setDraftSelectedYear(selectedYear);
-    setIsFilterModalOpen(true);
-  };
-
-  const handleApplyFilter = () => {
-    setRange(draftRange);
-    setType(draftType);
-    setSelectedMonth(draftSelectedMonth);
-    setSelectedYear(draftSelectedYear);
+  const handleApplyFilter = (filters: {
+    range: SavingDateRange;
+    type: SavingTypeFilter;
+    selectedMonth: string;
+    selectedYear: string;
+  }) => {
+    setRange(filters.range);
+    setType(filters.type);
+    setSelectedMonth(filters.selectedMonth);
+    setSelectedYear(filters.selectedYear);
     setIsFilterModalOpen(false);
   };
 
@@ -155,7 +119,9 @@ function SavingTransactionListScreen() {
       return `Năm ${selectedYear}`;
     }
 
-    return rangeOptions.find((item) => item.value === range)?.label || "30 ngày";
+    return (
+      rangeOptions.find((item) => item.value === range)?.label || "30 ngày"
+    );
   }, [range, selectedMonth, selectedYear]);
 
   if (loading) {
@@ -167,14 +133,10 @@ function SavingTransactionListScreen() {
   }
 
   return (
-    // Xóa mọi class overflow đi vì không cần thiết nữa
     <div className="bg-[#F7F9FF] font-sans">
-      
-      {/* 1. SỬA ĐÂY: Dùng fixed thay cho absolute để vòng tròn không bao giờ đẩy chiều cao trang */}
       <div className="pointer-events-none fixed left-0 top-0 z-0 h-64 w-64 -translate-x-1/3 -translate-y-1/3 rounded-full bg-[#E0E7FF] opacity-70 blur-[80px]" />
       <div className="pointer-events-none fixed right-0 top-20 z-0 h-72 w-72 translate-x-1/3 rounded-full bg-[#F3E8FF] opacity-60 blur-[80px]" />
 
-      {/* 2. SỬA ĐÂY: Header được làm Sticky để đứng im khi cuộn giống trang Search */}
       <div className="sticky top-0 z-20 bg-[#F7F9FF]/80 px-5 pb-3 pt-8 backdrop-blur-md shadow-[0_4px_10px_-4px_rgba(0,0,0,0.05)]">
         <div className="mx-auto max-w-[760px] flex items-center justify-between">
           <ArrowLeftOutlined
@@ -188,9 +150,7 @@ function SavingTransactionListScreen() {
         </div>
       </div>
 
-      {/* 3. VÙNG NỘI DUNG CUỘN ĐƯỢC */}
       <div className="relative z-10 mx-auto max-w-[760px] px-5 pb-6 pt-5">
-        
         {/* Balance */}
         <div className="mb-5 rounded-[28px] border border-white bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
           <div className="flex items-start justify-between">
@@ -231,7 +191,7 @@ function SavingTransactionListScreen() {
           </div>
 
           <div
-            onClick={openFilterModal}
+            onClick={() => setIsFilterModalOpen(true)}
             className="flex cursor-pointer items-center gap-2 rounded-2xl border border-gray-50 bg-white px-3 py-2 font-bold text-gray-700 shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition hover:bg-gray-50"
           >
             <FilterOutlined /> Lọc
@@ -300,110 +260,15 @@ function SavingTransactionListScreen() {
         )}
       </div>
 
-      {/* Filter Modal */}
-      <Modal
-        title={
-          <span className="text-lg font-black text-[#111438]">
-            Bộ lọc tiết kiệm
-          </span>
-        }
-        open={isFilterModalOpen}
-        onCancel={() => setIsFilterModalOpen(false)}
-        footer={null}
-        centered
-        className="custom-modal"
-      >
-        <div className="flex flex-col pt-2">
-          <div className="custom-scrollbar flex max-h-[60dvh] flex-col gap-6 overflow-y-auto pb-4 pr-2">
-            <div>
-              <div className="mb-3 text-sm font-bold text-gray-700">
-                Thời gian danh sách
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {rangeOptions.map((opt) => (
-                  <div
-                    key={opt.value}
-                    onClick={() => setDraftRange(opt.value)}
-                    className={`cursor-pointer rounded-xl px-4 py-2 text-[13px] transition-colors ${
-                      draftRange === opt.value
-                        ? "bg-[#895BFF] font-bold text-white shadow-md"
-                        : "bg-gray-100 font-medium text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    {opt.label}
-                  </div>
-                ))}
-              </div>
-
-              {draftRange === "customMonth" && (
-                <div className="mt-3">
-                  <DatePicker
-                    picker="month"
-                    className="h-11 w-full rounded-xl"
-                    value={dayjs(`${draftSelectedMonth}-01`)}
-                    format="MM/YYYY"
-                    placeholder="Chọn tháng"
-                    onChange={(value) => {
-                      if (!value) return;
-                      setDraftSelectedMonth(value.format("YYYY-MM"));
-                    }}
-                  />
-                </div>
-              )}
-
-              {draftRange === "customYear" && (
-                <div className="mt-3">
-                  <DatePicker
-                    picker="year"
-                    className="h-11 w-full rounded-xl"
-                    value={dayjs(`${draftSelectedYear}-01-01`)}
-                    format="YYYY"
-                    placeholder="Chọn năm"
-                    onChange={(value) => {
-                      if (!value) return;
-                      setDraftSelectedYear(value.format("YYYY"));
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="mb-3 text-sm font-bold text-gray-700">
-                Loại giao dịch
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {typeOptions.map((opt) => (
-                  <div
-                    key={opt.value}
-                    onClick={() => setDraftType(opt.value)}
-                    className={`cursor-pointer rounded-xl px-4 py-2 text-[13px] transition-colors ${
-                      draftType === opt.value
-                        ? "bg-[#895BFF] font-bold text-white shadow-md"
-                        : "bg-gray-100 font-medium text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    {opt.label}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-2 border-t border-gray-100 pt-4">
-            <Button
-              type="primary"
-              size="large"
-              className="h-12 w-full rounded-[16px] border-none bg-[#895BFF] font-bold shadow-[0_8px_20px_rgba(137,91,255,0.25)]"
-              onClick={handleApplyFilter}
-            >
-              Áp dụng
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      <SavingFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApply={handleApplyFilter}
+        currentRange={range}
+        currentType={type}
+        currentSelectedMonth={selectedMonth}
+        currentSelectedYear={selectedYear}
+      />
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
@@ -428,6 +293,7 @@ function SavingTransactionListScreen() {
   );
 }
 
+// Giữ nguyên các sub-component Helper phía bên dưới
 function SummaryBox({
   label,
   value,
@@ -445,10 +311,7 @@ function SummaryBox({
         {label}
       </div>
 
-      <div
-        className="truncate text-[14px] font-black"
-        style={{ color }}
-      >
+      <div className="truncate text-[14px] font-black" style={{ color }}>
         {prefix}
         {formatMoney(value)}
       </div>
