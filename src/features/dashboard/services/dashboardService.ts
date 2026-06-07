@@ -1,7 +1,10 @@
 import dayjs from "dayjs";
 import { db } from "../../../database/db";
 import type { Category, Transaction, Wallet } from "../../../database/db";
-import { getCurrentMonthRange, getCurrentWeekRange } from "../../../shared/utils/dateRange";
+import {
+  getCurrentMonthRange,
+  getCurrentWeekRange,
+} from "../../../shared/utils/dateRange";
 
 export type DashboardSummary = {
   wallet: Wallet | null;
@@ -10,6 +13,7 @@ export type DashboardSummary = {
   totalIncomeThisMonth: number;
   totalExpenseThisMonth: number;
   totalDebtThisMonth: number;
+  totalExpenseThisWeek: number;
   remainThisMonth: number;
 
   monthPieChartData: {
@@ -40,7 +44,9 @@ export type RecentTransactionItem = Transaction & {
   category?: Category;
 };
 
-export async function getDashboardSummary(userId: string): Promise<DashboardSummary> {
+export async function getDashboardSummary(
+  userId: string,
+): Promise<DashboardSummary> {
   const wallet = await db.wallets
     .where("userId")
     .equals(userId)
@@ -61,16 +67,35 @@ export async function getDashboardSummary(userId: string): Promise<DashboardSumm
   const currentWeekRange = getCurrentWeekRange();
 
   const transactionsThisMonth = transactions.filter((item) => {
-    return item.date >= currentMonthRange.startDate && item.date <= currentMonthRange.endDate;
+    return (
+      item.date >= currentMonthRange.startDate &&
+      item.date <= currentMonthRange.endDate
+    );
   });
 
   const transactionsThisWeek = transactions.filter((item) => {
-    return item.date >= currentWeekRange.startDate && item.date <= currentWeekRange.endDate;
+    return (
+      item.date >= currentWeekRange.startDate &&
+      item.date <= currentWeekRange.endDate
+    );
   });
 
-  const totalIncomeThisMonth = sumAmountByType(transactionsThisMonth, "income");
-  const totalExpenseThisMonth = sumAmountByType(transactionsThisMonth, "expense");
+  const totalIncomeThisMonth = sumAmountByType(
+    transactionsThisMonth,
+    "income",
+  );
+
+  const totalExpenseThisMonth = sumAmountByType(
+    transactionsThisMonth,
+    "expense",
+  );
+
   const totalDebtThisMonth = sumAmountByType(transactionsThisMonth, "debt");
+
+  const totalExpenseThisWeek = sumAmountByType(
+    transactionsThisWeek,
+    "expense",
+  );
 
   const remainThisMonth = totalIncomeThisMonth - totalExpenseThisMonth;
 
@@ -89,23 +114,27 @@ export async function getDashboardSummary(userId: string): Promise<DashboardSumm
     },
   ].filter((item) => item.value > 0);
 
-  const dailyExpenseChartData = buildDailyExpenseChartData(transactionsThisMonth);
+  const dailyExpenseChartData = buildDailyExpenseChartData(
+    transactionsThisMonth,
+  );
 
-  const topExpenseThisWeek = getTopExpenseByCategory(transactionsThisWeek, categories);
-  const topExpenseThisMonth = getTopExpenseByCategory(transactionsThisMonth, categories);
+  const topExpenseThisWeek = getTopExpenseByCategory(
+    transactionsThisWeek,
+    categories,
+  );
 
-  const recentTransactions = transactions
-    .sort((a, b) => {
-      const dateA = new Date(`${a.date} ${a.createdAt}`).getTime();
-      const dateB = new Date(`${b.date} ${b.createdAt}`).getTime();
+  const topExpenseThisMonth = getTopExpenseByCategory(
+    transactionsThisMonth,
+    categories,
+  );
 
-      return dateB - dateA;
-    })
-    .slice(0, 6)
+  const recentTransactions = [...transactions]
     .map((item) => ({
       ...item,
       category: categories.find((category) => category.id === item.categoryId),
-    }));
+    }))
+    .sort((a, b) => getTransactionTime(b) - getTransactionTime(a))
+    .slice(0, 10);
 
   return {
     wallet: wallet || null,
@@ -114,6 +143,7 @@ export async function getDashboardSummary(userId: string): Promise<DashboardSumm
     totalIncomeThisMonth,
     totalExpenseThisMonth,
     totalDebtThisMonth,
+    totalExpenseThisWeek,
     remainThisMonth,
 
     monthPieChartData,
@@ -128,7 +158,7 @@ export async function getDashboardSummary(userId: string): Promise<DashboardSumm
 
 function sumAmountByType(
   transactions: Transaction[],
-  type: "income" | "expense" | "debt"
+  type: "income" | "expense" | "debt",
 ) {
   return transactions
     .filter((item) => item.type === type)
@@ -159,16 +189,18 @@ function buildDailyExpenseChartData(transactions: Transaction[]) {
 
 function getTopExpenseByCategory(
   transactions: Transaction[],
-  categories: Category[]
+  categories: Category[],
 ): TopExpenseItem[] {
-  const expenseTransactions = transactions.filter((item) => item.type === "expense");
+  const expenseTransactions = transactions.filter(
+    (item) => item.type === "expense",
+  );
 
   const groupByCategory = expenseTransactions.reduce<Record<string, number>>(
     (result, item) => {
       result[item.categoryId] = (result[item.categoryId] || 0) + item.amount;
       return result;
     },
-    {}
+    {},
   );
 
   return Object.entries(groupByCategory)
@@ -185,4 +217,30 @@ function getTopExpenseByCategory(
     })
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 3);
+}
+
+function getTransactionTime(transaction: Transaction) {
+  const updatedAtTime = transaction.updatedAt
+    ? new Date(transaction.updatedAt).getTime()
+    : NaN;
+
+  if (!Number.isNaN(updatedAtTime)) {
+    return updatedAtTime;
+  }
+
+  const createdAtTime = transaction.createdAt
+    ? new Date(transaction.createdAt).getTime()
+    : NaN;
+
+  if (!Number.isNaN(createdAtTime)) {
+    return createdAtTime;
+  }
+
+  const dateTime = transaction.date ? new Date(transaction.date).getTime() : NaN;
+
+  if (!Number.isNaN(dateTime)) {
+    return dateTime;
+  }
+
+  return 0;
 }

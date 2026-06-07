@@ -394,7 +394,7 @@ const DashboardScreen: React.FC = () => {
                 <div className="bg-[#F0EEFF] text-[#895BFF] text-[11px] px-2.5 py-0.5 rounded-full font-medium">
                   {Math.round(
                     (data.topExpenseThisWeek[0].amount /
-                      (data.totalExpenseThisMonth || 1)) *
+                      (data.totalExpenseThisWeek || 1)) *
                       100,
                   )}
                   % tổng chi
