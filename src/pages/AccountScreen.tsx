@@ -406,7 +406,7 @@ function AccountScreen() {
                   />
                 </div>
 
-                <div className="flex justify-center flex-col">
+                <div className="flex justify-center flex-col align-center">
                   <div className="mb-1 flex items-center gap-2">
                     <h2 className="m-0 text-center text-[17px] font-bold">
                       {user?.username || "Người dùng"}
