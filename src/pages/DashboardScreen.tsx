@@ -394,7 +394,7 @@ const DashboardScreen: React.FC = () => {
                 <div className="bg-[#F0EEFF] text-[#895BFF] text-[11px] px-2.5 py-0.5 rounded-full font-medium">
                   {Math.round(
                     (data.topExpenseThisWeek[0].amount /
-                      (data.totalExpenseThisMonth || 1)) *
+                      (data.totalExpenseThisWeek || 1)) *
                       100,
                   )}
                   % tổng chi
@@ -489,7 +489,7 @@ const DashboardScreen: React.FC = () => {
                       </div>
 
                       <div>
-                        <div className="font-bold text-[#111438] text-[14px]">
+                        <div className="text-[#111438] text-[14px]">
                           {tx.note || tx.category?.name || "Giao dịch"}
                         </div>
                         <div className="text-[12px] text-gray-400 mt-0.5">
