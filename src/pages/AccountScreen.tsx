@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
-import { Modal, Skeleton, Switch, message } from "antd";
-import { RightOutlined, LogoutOutlined } from "@ant-design/icons";
+import { Button, Form, Input, Modal, Skeleton, Switch, message } from "antd";
+import {
+  RightOutlined,
+  LogoutOutlined,
+  CloudOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 import type { User } from "../database/db";
@@ -11,9 +15,26 @@ import {
   setRequirePassword,
 } from "../features/auth/services/authService";
 
+import {
+  cloudLogin,
+  cloudLogout,
+  cloudRegister,
+  getCloudSession,
+} from "../features/cloud/services/cloudAuthService";
+import {
+  compareLocalAndCloudData,
+  pullAllCloudDataToLocal,
+  pushAllLocalDataToCloud,
+} from "../features/cloud/services/cloudSyncService";
+
 import { FaLock } from "react-icons/fa";
 import { SiSimpleanalytics } from "react-icons/si";
 import { MdOutlinePassword } from "react-icons/md";
+
+type CloudFormValues = {
+  email: string;
+  password: string;
+};
 
 const MenuRow = ({ icon, title, subtitle, onClick, danger = false }: any) => (
   <div
@@ -77,9 +98,17 @@ const SwitchRow = ({
 function AccountScreen() {
   const navigate = useNavigate();
 
+  const [cloudForm] = Form.useForm<CloudFormValues>();
+
   const [loading, setLoading] = useState(true);
+  const [cloudLoading, setCloudLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
+
   const [user, setUser] = useState<User | null>(null);
   const [requirePassword, setRequirePasswordState] = useState(false);
+
+  const [cloudEmail, setCloudEmail] = useState<string | null>(null);
+  const [cloudModalOpen, setCloudModalOpen] = useState(false);
 
   useEffect(() => {
     const initPage = async () => {
@@ -94,6 +123,8 @@ function AccountScreen() {
 
         setUser(currentUser);
         setRequirePasswordState(isRequirePasswordEnabled(currentUser.id));
+
+        await loadCloudSession();
       } catch (error) {
         message.error("Không thể tải thông tin tài khoản");
       } finally {
@@ -103,6 +134,16 @@ function AccountScreen() {
 
     initPage();
   }, [navigate]);
+
+  const loadCloudSession = async () => {
+    const session = await getCloudSession();
+
+    if (session?.user?.email) {
+      setCloudEmail(session.user.email);
+    } else {
+      setCloudEmail(null);
+    }
+  };
 
   const handleToggleRequirePassword = (checked: boolean) => {
     if (!user) return;
@@ -115,6 +156,207 @@ function AccountScreen() {
         ? "Đã bật hỏi mật khẩu mỗi lần truy cập"
         : "Đã tắt hỏi mật khẩu mỗi lần truy cập",
     );
+  };
+
+  const handleCloudRegister = async () => {
+    try {
+      const values = await cloudForm.validateFields();
+
+      setCloudLoading(true);
+
+      await cloudRegister({
+        email: values.email,
+        password: values.password,
+      });
+
+      await loadCloudSession();
+
+      message.success(
+        "Đăng ký cloud thành công. Nếu Supabase yêu cầu xác nhận email, bạn hãy kiểm tra email trước khi đăng nhập.",
+      );
+
+      setCloudModalOpen(false);
+      cloudForm.resetFields();
+    } catch (error) {
+      message.error(
+        error instanceof Error ? error.message : "Đăng ký cloud thất bại",
+      );
+    } finally {
+      setCloudLoading(false);
+    }
+  };
+
+  const handleCloudLogin = async () => {
+    try {
+      const values = await cloudForm.validateFields();
+
+      setCloudLoading(true);
+
+      await cloudLogin({
+        email: values.email,
+        password: values.password,
+      });
+
+      await loadCloudSession();
+
+      message.success("Đăng nhập cloud thành công");
+      setCloudModalOpen(false);
+      cloudForm.resetFields();
+    } catch (error) {
+      message.error(
+        error instanceof Error ? error.message : "Đăng nhập cloud thất bại",
+      );
+    } finally {
+      setCloudLoading(false);
+    }
+  };
+
+  const handleCloudLogout = async () => {
+    try {
+      setCloudLoading(true);
+
+      await cloudLogout();
+      await loadCloudSession();
+
+      message.success("Đã đăng xuất tài khoản cloud");
+    } catch (error) {
+      message.error(
+        error instanceof Error ? error.message : "Đăng xuất cloud thất bại",
+      );
+    } finally {
+      setCloudLoading(false);
+    }
+  };
+
+  const handleSyncToCloud = async () => {
+    try {
+      if (!user) return;
+
+      if (!cloudEmail) {
+        message.warning("Bạn cần đăng nhập tài khoản cloud trước");
+        setCloudModalOpen(true);
+        return;
+      }
+
+      setSyncLoading(true);
+
+      await pushAllLocalDataToCloud(user.id);
+
+      message.success("Đã đồng bộ toàn bộ dữ liệu local lên Supabase");
+    } catch (error) {
+      message.error(
+        error instanceof Error ? error.message : "Đồng bộ cloud thất bại",
+      );
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
+  const handleCompareCloud = async () => {
+    try {
+      if (!user) return;
+
+      if (!cloudEmail) {
+        message.warning("Bạn cần đăng nhập tài khoản cloud trước");
+        return;
+      }
+
+      const result = await compareLocalAndCloudData(user.id);
+
+      console.log("So sánh local/cloud:", result);
+
+      const allMatched =
+        result.wallets.matched &&
+        result.categories.matched &&
+        result.transactions.matched &&
+        result.savingTransactions.matched &&
+        result.savingGoals.matched &&
+        result.notifications.matched &&
+        result.appSettings.matched;
+
+      if (allMatched) {
+        message.success("Dữ liệu cloud đã khớp toàn bộ với local");
+        return;
+      }
+
+      Modal.info({
+        title: "Dữ liệu chưa khớp",
+        centered: true,
+        width: 420,
+        content: (
+          <div className="mt-3 text-sm leading-6">
+            <div>
+              Ví: local {result.wallets.local} / cloud {result.wallets.cloud}
+            </div>
+            <div>
+              Nhóm: local {result.categories.local} / cloud{" "}
+              {result.categories.cloud}
+            </div>
+            <div>
+              Giao dịch: local {result.transactions.local} / cloud{" "}
+              {result.transactions.cloud}
+            </div>
+            <div>
+              Giao dịch tiết kiệm: local {result.savingTransactions.local} /
+              cloud {result.savingTransactions.cloud}
+            </div>
+            <div>
+              Mục tiêu tiết kiệm: local {result.savingGoals.local} / cloud{" "}
+              {result.savingGoals.cloud}
+            </div>
+            <div>
+              Thông báo: local {result.notifications.local} / cloud{" "}
+              {result.notifications.cloud}
+            </div>
+            <div>
+              Cài đặt: local {result.appSettings.local} / cloud{" "}
+              {result.appSettings.cloud}
+            </div>
+            <div className="mt-3 text-xs text-gray-400">
+              Mở Console để xem chi tiết missingOnCloud / extraOnCloud.
+            </div>
+          </div>
+        ),
+      });
+    } catch (error) {
+      message.error(
+        error instanceof Error ? error.message : "Không thể kiểm tra cloud",
+      );
+    }
+  };
+
+  const handlePullFromCloud = async () => {
+    try {
+      if (!user) return;
+
+      if (!cloudEmail) {
+        message.warning("Bạn cần đăng nhập tài khoản cloud trước");
+        setCloudModalOpen(true);
+        return;
+      }
+
+      Modal.confirm({
+        title: "Tải dữ liệu từ cloud?",
+        content:
+          "Dữ liệu local hiện tại của tài khoản này sẽ được thay bằng dữ liệu trên Supabase. Bạn nên chỉ dùng thao tác này trên máy mới hoặc khi muốn khôi phục dữ liệu.",
+        okText: "Tải về",
+        cancelText: "Hủy",
+        centered: true,
+        onOk: async () => {
+          const result = await pullAllCloudDataToLocal(user.id);
+
+          message.success(
+            `Đã tải dữ liệu cloud: ${result.transactions} giao dịch, ${result.categories} nhóm, ${result.wallets} ví`,
+          );
+
+          navigate("/dashboard", { replace: true });
+        },
+      });
+    } catch (error) {
+      message.error(
+        error instanceof Error ? error.message : "Không thể tải dữ liệu cloud",
+      );
+    }
   };
 
   const handleLogout = () => {
@@ -170,8 +412,83 @@ function AccountScreen() {
                       {user?.username || "Người dùng"}
                     </h2>
                   </div>
+
+                  {cloudEmail && (
+                    <div className="text-center text-[12px] font-medium text-[#895BFF]">
+                      Cloud: {cloudEmail}
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="mb-3 ml-2 text-[14px] font-bold text-gray-500">
+              Tài khoản cloud
+            </h3>
+
+            <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+              {!cloudEmail ? (
+                <MenuRow
+                  icon={<CloudOutlined />}
+                  title="Đăng nhập cloud"
+                  subtitle="Liên kết Supabase để đồng bộ dữ liệu"
+                  onClick={() => setCloudModalOpen(true)}
+                />
+              ) : (
+                <>
+                  <div className="border-b border-gray-50 p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="text-[22px] text-[#895BFF]">
+                        <CloudOutlined />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[15px] font-semibold text-[#1A1C29]">
+                          Đã đăng nhập cloud
+                        </div>
+                        <div className="mt-0.5 truncate text-[13px] text-gray-400">
+                          {cloudEmail}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <MenuRow
+                    icon={<CloudOutlined />}
+                    title={
+                      syncLoading
+                        ? "Đang đồng bộ..."
+                        : "Đồng bộ toàn bộ dữ liệu"
+                    }
+                    subtitle="Đẩy ví, nhóm, giao dịch, tiết kiệm, mục tiêu và thông báo lên Supabase"
+                    onClick={syncLoading ? undefined : handleSyncToCloud}
+                  />
+
+                  <MenuRow
+                    icon={<CloudOutlined />}
+                    title="Kiểm tra dữ liệu cloud"
+                    subtitle="So sánh số lượng và ID giữa local và Supabase"
+                    onClick={handleCompareCloud}
+                  />
+
+                  <MenuRow
+                    icon={<CloudOutlined />}
+                    title="Tải dữ liệu từ cloud"
+                    subtitle="Khôi phục dữ liệu Supabase về máy hiện tại"
+                    onClick={handlePullFromCloud}
+                  />
+
+                  <MenuRow
+                    icon={<LogoutOutlined />}
+                    title="Đăng xuất cloud"
+                    subtitle="Chỉ đăng xuất cloud, không đăng xuất app local"
+                    onClick={handleCloudLogout}
+                    danger
+                  />
+                </>
+              )}
             </div>
           </div>
 
@@ -230,6 +547,88 @@ function AccountScreen() {
           </div>
         </div>
       </div>
+
+      <Modal
+        title={
+          <span className="text-[18px] font-black text-[#111438]">
+            Tài khoản cloud
+          </span>
+        }
+        open={cloudModalOpen}
+        onCancel={() => setCloudModalOpen(false)}
+        footer={null}
+        centered
+      >
+        <div className="pt-3">
+          <div className="mb-5 rounded-2xl bg-[#F7F8FF] p-4 text-[13px] leading-5 text-gray-500">
+            Dùng tài khoản cloud để đồng bộ dữ liệu Money Note lên Supabase. Tài
+            khoản local hiện tại của bạn vẫn được giữ nguyên.
+          </div>
+
+          <Form form={cloudForm} layout="vertical" requiredMark={false}>
+            <Form.Item
+              label="Email"
+              name="email"
+              rules={[
+                {
+                  required: true,
+                  message: "Vui lòng nhập email",
+                },
+                {
+                  type: "email",
+                  message: "Email không hợp lệ",
+                },
+              ]}
+            >
+              <Input
+                placeholder="Nhập email cloud"
+                autoComplete="email"
+                className="h-11 rounded-xl"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="Mật khẩu"
+              name="password"
+              rules={[
+                {
+                  required: true,
+                  message: "Vui lòng nhập mật khẩu",
+                },
+                {
+                  min: 6,
+                  message: "Mật khẩu tối thiểu 6 ký tự",
+                },
+              ]}
+            >
+              <Input.Password
+                placeholder="Nhập mật khẩu cloud"
+                autoComplete="current-password"
+                className="h-11 rounded-xl"
+              />
+            </Form.Item>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <Button
+                onClick={handleCloudRegister}
+                loading={cloudLoading}
+                className="h-11 rounded-xl font-bold"
+              >
+                Đăng ký
+              </Button>
+
+              <Button
+                type="primary"
+                onClick={handleCloudLogin}
+                loading={cloudLoading}
+                className="h-11 rounded-xl bg-[#895BFF] font-bold"
+              >
+                Đăng nhập
+              </Button>
+            </div>
+          </Form>
+        </div>
+      </Modal>
     </div>
   );
 }
