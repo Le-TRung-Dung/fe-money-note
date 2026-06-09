@@ -27,9 +27,9 @@ import {
   pushAllLocalDataToCloud,
 } from "../features/cloud/services/cloudSyncService";
 
-import { FaLock } from "react-icons/fa";
+import { FaCloud, FaCloudDownloadAlt, FaCloudUploadAlt, FaLock } from "react-icons/fa";
 import { SiSimpleanalytics } from "react-icons/si";
-import { MdOutlinePassword } from "react-icons/md";
+import { MdCloudDone, MdOutlinePassword } from "react-icons/md";
 
 type CloudFormValues = {
   email: string;
@@ -406,7 +406,7 @@ function AccountScreen() {
                   />
                 </div>
 
-                <div>
+                <div className="flex justify-center flex-col">
                   <div className="mb-1 flex items-center gap-2">
                     <h2 className="m-0 text-center text-[17px] font-bold">
                       {user?.username || "Người dùng"}
@@ -441,7 +441,7 @@ function AccountScreen() {
                   <div className="border-b border-gray-50 p-4">
                     <div className="flex items-center gap-3">
                       <div className="text-[22px] text-[#895BFF]">
-                        <CloudOutlined />
+                        <FaCloud />
                       </div>
 
                       <div className="min-w-0 flex-1">
@@ -456,7 +456,7 @@ function AccountScreen() {
                   </div>
 
                   <MenuRow
-                    icon={<CloudOutlined />}
+                    icon={<FaCloudUploadAlt />}
                     title={
                       syncLoading
                         ? "Đang đồng bộ..."
@@ -467,14 +467,14 @@ function AccountScreen() {
                   />
 
                   <MenuRow
-                    icon={<CloudOutlined />}
+                    icon={<MdCloudDone />}
                     title="Kiểm tra dữ liệu cloud"
                     subtitle="So sánh số lượng và ID giữa local và Supabase"
                     onClick={handleCompareCloud}
                   />
 
                   <MenuRow
-                    icon={<CloudOutlined />}
+                    icon={<FaCloudDownloadAlt />}
                     title="Tải dữ liệu từ cloud"
                     subtitle="Khôi phục dữ liệu Supabase về máy hiện tại"
                     onClick={handlePullFromCloud}
