@@ -27,7 +27,13 @@ import {
   pushAllLocalDataToCloud,
 } from "../features/cloud/services/cloudSyncService";
 
-import { FaCloud, FaCloudDownloadAlt, FaCloudUploadAlt, FaLock } from "react-icons/fa";
+import {
+  FaCloud,
+  FaCloudDownloadAlt,
+  FaCloudUploadAlt,
+  FaLock,
+  FaMoneyBillWave,
+} from "react-icons/fa";
 import { SiSimpleanalytics } from "react-icons/si";
 import { MdCloudDone, MdOutlinePassword } from "react-icons/md";
 
@@ -270,6 +276,7 @@ function AccountScreen() {
         result.categories.matched &&
         result.transactions.matched &&
         result.savingTransactions.matched &&
+        result.salaryRecords.matched &&
         result.savingGoals.matched &&
         result.notifications.matched &&
         result.appSettings.matched;
@@ -314,6 +321,10 @@ function AccountScreen() {
             </div>
             <div className="mt-3 text-xs text-gray-400">
               Mở Console để xem chi tiết missingOnCloud / extraOnCloud.
+            </div>
+            <div>
+              Ví lương: local {result.salaryRecords.local} / cloud{" "}
+              {result.salaryRecords.cloud}
             </div>
           </div>
         ),
@@ -420,6 +431,20 @@ function AccountScreen() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+          <div className="mb-6">
+            <h3 className="mb-3 ml-2 text-[14px] font-bold text-gray-500">
+              Tài chính cá nhân
+            </h3>
+
+            <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+              <MenuRow
+                icon={<FaMoneyBillWave />}
+                title="Ví lương"
+                subtitle="Quản lý lương, thưởng và hoàn thuế"
+                onClick={() => navigate("/salary")}
+              />
             </div>
           </div>
 

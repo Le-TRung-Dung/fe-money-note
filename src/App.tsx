@@ -22,6 +22,8 @@ import SavingTransactionSearchScreen from "./pages/SavingTransactionSearchScreen
 import NotificationScreen from "./pages/NotificationScreen";
 import TransactionStatisticScreen from "./pages/TransactionStatisticScreen";
 import UnlockScreen from "./pages/UnlockScreen";
+import SalaryScreen from "./pages/SalaryScreen";
+import SalaryCreateScreen from "./pages/SalaryCreateScreen";
 
 const App: React.FC = () => {
   return (
@@ -53,6 +55,9 @@ const App: React.FC = () => {
             path="/transactions/create"
             element={<TransactionCreateScreen />}
           />
+          <Route path="/salary" element={<SalaryScreen />} />
+          <Route path="/salary/create" element={<SalaryCreateScreen />} />
+          <Route path="/salary/:id/edit" element={<SalaryCreateScreen />} />
           <Route
             path="/transactions/:id/edit"
             element={<TransactionCreateScreen />}

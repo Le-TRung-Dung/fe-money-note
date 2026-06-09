@@ -115,6 +115,36 @@ export type AppNotification = {
   createdAt: string;
 };
 
+export type SalaryRecordType = "salary" | "bonus" | "tax_refund";
+
+export type SalaryRecord = {
+  id: string;
+  userId: string;
+
+  type: SalaryRecordType;
+  amount: number;
+
+  /**
+   * Tháng tính lương, dùng để thống kê.
+   * Ví dụ: 2026-06
+   */
+  month: string;
+
+  /**
+   * Ngày thực nhận tiền.
+   * Ví dụ: 2026-06-10
+   */
+  receivedDate: string;
+
+  company?: string;
+  note?: string;
+  description?: string;
+
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+};
+
 class MoneyNoteDatabase extends Dexie {
   users!: Table<User, string>;
   wallets!: Table<Wallet, string>;
@@ -123,6 +153,9 @@ class MoneyNoteDatabase extends Dexie {
   savingTransactions!: Table<SavingTransaction, string>;
   savingGoals!: Table<SavingGoal, string>;
   notifications!: Table<AppNotification, string>;
+
+  // THÊM BẢNG NÀY
+  salaryRecords!: Table<SalaryRecord, string>;
 
   constructor() {
     super("MoneyNoteDB");
@@ -167,6 +200,21 @@ class MoneyNoteDatabase extends Dexie {
       savingTransactions: "id, userId, walletId, type, date, createdAt",
       savingGoals: "id, userId, targetAmount, deadline, createdAt",
       notifications: "id, userId, type, isRead, createdAt",
+    });
+
+    // THÊM VERSION 6, không sửa version cũ
+    this.version(6).stores({
+      users: "id, &username",
+      wallets: "id, userId, isDefault, type",
+      categories: "id, userId, type, name",
+      transactions:
+        "id, userId, walletId, categoryId, type, debtType, date, createdAt",
+      savingTransactions: "id, userId, walletId, type, date, createdAt",
+      savingGoals: "id, userId, targetAmount, deadline, createdAt",
+      notifications: "id, userId, type, isRead, createdAt",
+
+      salaryRecords:
+        "id, userId, type, month, receivedDate, createdAt, updatedAt",
     });
   }
 }
