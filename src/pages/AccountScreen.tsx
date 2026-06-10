@@ -39,6 +39,7 @@ import {
 } from "react-icons/fa";
 import { SiSimpleanalytics } from "react-icons/si";
 import { MdCloudDone, MdOutlinePassword } from "react-icons/md";
+import { TbLockBitcoin } from "react-icons/tb";
 
 type CloudFormValues = {
   email: string;
@@ -529,21 +530,20 @@ function AccountScreen() {
                     onClick={handleCloudLogout}
                     danger
                   />
-                 
                 </>
               )}
             </div>
           </div>
 
-           <div
-                    onClick={() => {
-                      setCloudModalOpen(false);
-                      navigate("/cloud-forgot-password");
-                    }}
-                    className="mt-3 cursor-pointer text-center text-[13px] font-bold text-[#895BFF]"
-                  >
-                    Quên mật khẩu cloud?
-                  </div>
+          {/* <div
+            onClick={() => {
+              setCloudModalOpen(false);
+              navigate("/cloud-forgot-password");
+            }}
+            className="mt-3 cursor-pointer text-center text-[13px] font-bold text-[#895BFF]"
+          >
+            Quên mật khẩu cloud?
+          </div> */}
 
           <div className="mb-6">
             <h3 className="mb-3 ml-2 text-[14px] font-bold text-gray-500">
@@ -571,8 +571,8 @@ function AccountScreen() {
               />
 
               <SwitchRow
-                icon={<LockOutlined />}
-                title="Khóa Ví lương"
+                icon={<TbLockBitcoin />}
+                title="Khóa ví lương"
                 subtitle="Yêu cầu mật khẩu khi truy cập lương, thưởng và hoàn thuế"
                 checked={salaryLock}
                 onChange={handleToggleSalaryLock}

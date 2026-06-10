@@ -238,7 +238,7 @@ function SalaryStatisticScreen() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#F7F9FF] px-5 py-8 pb-32 font-sans">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#F7F9FF] px-5 py-8 font-sans">
       <div className="pointer-events-none absolute left-0 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#DCFCE7] opacity-70 blur-[80px]" />
       <div className="pointer-events-none absolute right-0 top-20 h-80 w-80 translate-x-1/3 rounded-full bg-[#F3E8FF] opacity-70 blur-[80px]" />
 
@@ -619,7 +619,7 @@ function StatisticSummaryCard({
       </div>
 
       <div
-        className="break-words text-[13px] font-black leading-tight"
+        className="break-words text-[11px] font-black leading-tight"
         style={{ color }}
       >
         {formatMoney(value)}
