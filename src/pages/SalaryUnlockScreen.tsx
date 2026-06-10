@@ -7,12 +7,14 @@ import {
   LockOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import logo from '../assets/logo.png';
 
 import { STORAGE_KEYS } from "../shared/constants/storageKeys";
 import {
   markSalaryUnlocked,
   verifyCurrentUserPassword,
 } from "../features/auth/services/authService";
+import { FaLock } from "react-icons/fa";
 
 function SalaryUnlockScreen() {
   const navigate = useNavigate();
@@ -61,7 +63,7 @@ function SalaryUnlockScreen() {
       <div className="pointer-events-none absolute right-0 top-20 h-80 w-80 translate-x-1/3 rounded-full bg-[#F3E8FF] opacity-70 blur-[80px]" />
 
       <div className="relative z-10 mx-auto flex h-full max-w-[520px] flex-col">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <button
             onClick={() => navigate("/account", { replace: true })}
             className="flex h-10 w-10 items-center justify-center rounded-full border-none bg-white text-[#111438] shadow-sm"
@@ -84,7 +86,7 @@ function SalaryUnlockScreen() {
         <div className="flex flex-1 flex-col justify-center">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-[32px] bg-gradient-to-br from-[#22C55E] to-[#895BFF] text-4xl text-white shadow-[0_16px_40px_rgba(34,197,94,0.28)]">
-              <LockOutlined />
+              <img src={logo} />
             </div>
 
             <div className="text-[24px] font-black text-[#111438]">
@@ -109,7 +111,7 @@ function SalaryUnlockScreen() {
               placeholder="Nhập mật khẩu"
               size="large"
               className="h-12 rounded-2xl"
-              prefix={<LockOutlined className="text-gray-400" />}
+              prefix={<FaLock className="text-gray-400" />}
               iconRender={(visible) =>
                 visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
               }
