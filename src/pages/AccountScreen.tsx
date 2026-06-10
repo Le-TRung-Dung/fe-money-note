@@ -4,6 +4,7 @@ import {
   RightOutlined,
   LogoutOutlined,
   CloudOutlined,
+  LockOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
@@ -11,8 +12,10 @@ import type { User } from "../database/db";
 import {
   getCurrentUser,
   isRequirePasswordEnabled,
+  isSalaryLockEnabled,
   logout,
   setRequirePassword,
+  setSalaryLockEnabled,
 } from "../features/auth/services/authService";
 
 import {
@@ -105,6 +108,7 @@ function AccountScreen() {
   const navigate = useNavigate();
 
   const [cloudForm] = Form.useForm<CloudFormValues>();
+  const [salaryLock, setSalaryLock] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [cloudLoading, setCloudLoading] = useState(false);
@@ -129,7 +133,7 @@ function AccountScreen() {
 
         setUser(currentUser);
         setRequirePasswordState(isRequirePasswordEnabled(currentUser.id));
-
+        setSalaryLock(isSalaryLockEnabled(currentUser.id));
         await loadCloudSession();
       } catch (error) {
         message.error("Không thể tải thông tin tài khoản");
@@ -162,6 +166,19 @@ function AccountScreen() {
         ? "Đã bật hỏi mật khẩu mỗi lần truy cập"
         : "Đã tắt hỏi mật khẩu mỗi lần truy cập",
     );
+  };
+
+  const handleToggleSalaryLock = (checked: boolean) => {
+    if (!user?.id) {
+      message.error("Bạn cần đăng nhập lại");
+      navigate("/login");
+      return;
+    }
+
+    setSalaryLockEnabled(user?.id, checked);
+    setSalaryLock(checked);
+
+    message.success(checked ? "Đã bật khóa Ví lương" : "Đã tắt khóa Ví lương");
   };
 
   const handleCloudRegister = async () => {
@@ -512,10 +529,21 @@ function AccountScreen() {
                     onClick={handleCloudLogout}
                     danger
                   />
+                 
                 </>
               )}
             </div>
           </div>
+
+           <div
+                    onClick={() => {
+                      setCloudModalOpen(false);
+                      navigate("/cloud-forgot-password");
+                    }}
+                    className="mt-3 cursor-pointer text-center text-[13px] font-bold text-[#895BFF]"
+                  >
+                    Quên mật khẩu cloud?
+                  </div>
 
           <div className="mb-6">
             <h3 className="mb-3 ml-2 text-[14px] font-bold text-gray-500">
@@ -540,6 +568,14 @@ function AccountScreen() {
                 subtitle="Khi bật, mỗi lần mở lại ứng dụng sẽ cần nhập mật khẩu để tiếp tục."
                 checked={requirePassword}
                 onChange={handleToggleRequirePassword}
+              />
+
+              <SwitchRow
+                icon={<LockOutlined />}
+                title="Khóa Ví lương"
+                subtitle="Yêu cầu mật khẩu khi truy cập lương, thưởng và hoàn thuế"
+                checked={salaryLock}
+                onChange={handleToggleSalaryLock}
               />
 
               <MenuRow

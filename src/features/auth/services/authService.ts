@@ -1,6 +1,6 @@
 import { db } from "../../../database/db";
 import { ensureDefaultDataForUser } from "../../../database/seed";
-import { getPasswordUnlockedKey, getRequirePasswordKey, STORAGE_KEYS } from "../../../shared/constants/storageKeys";
+import { getPasswordUnlockedKey, getRequirePasswordKey, getSalaryLockKey, getSalaryUnlockedKey, STORAGE_KEYS } from "../../../shared/constants/storageKeys";
 import { createId } from "../../../shared/utils/id";
 import { hashPassword } from "../../../shared/utils/password";
 import type { LoginPayload, RegisterPayload } from "../types";
@@ -175,4 +175,28 @@ export async function verifyCurrentUserPassword(payload: {
 
 export function clearPasswordUnlocked(userId: string) {
   sessionStorage.removeItem(getPasswordUnlockedKey(userId));
+}
+
+export function isSalaryLockEnabled(userId: string) {
+  return localStorage.getItem(getSalaryLockKey(userId)) === "true";
+}
+
+export function setSalaryLockEnabled(userId: string, enabled: boolean) {
+  localStorage.setItem(getSalaryLockKey(userId), String(enabled));
+
+  if (!enabled) {
+    sessionStorage.removeItem(getSalaryUnlockedKey(userId));
+  }
+}
+
+export function isSalaryUnlocked(userId: string) {
+  return sessionStorage.getItem(getSalaryUnlockedKey(userId)) === "true";
+}
+
+export function markSalaryUnlocked(userId: string) {
+  sessionStorage.setItem(getSalaryUnlockedKey(userId), "true");
+}
+
+export function clearSalaryUnlocked(userId: string) {
+  sessionStorage.removeItem(getSalaryUnlockedKey(userId));
 }

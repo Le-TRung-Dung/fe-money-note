@@ -24,6 +24,12 @@ import TransactionStatisticScreen from "./pages/TransactionStatisticScreen";
 import UnlockScreen from "./pages/UnlockScreen";
 import SalaryScreen from "./pages/SalaryScreen";
 import SalaryCreateScreen from "./pages/SalaryCreateScreen";
+import SalarySearchScreen from "./pages/SalarySearchScreen";
+import SalaryStatisticScreen from "./pages/SalaryStatisticScreen";
+import SalaryUnlockScreen from "./pages/SalaryUnlockScreen";
+import SalaryLockGuard from "./components/SalaryLockGuard";
+import CloudForgotPasswordScreen from "./pages/CloudForgotPasswordScreen";
+import CloudResetPasswordScreen from "./pages/CloudResetPasswordScreen";
 
 const App: React.FC = () => {
   return (
@@ -55,9 +61,27 @@ const App: React.FC = () => {
             path="/transactions/create"
             element={<TransactionCreateScreen />}
           />
-          <Route path="/salary" element={<SalaryScreen />} />
-          <Route path="/salary/create" element={<SalaryCreateScreen />} />
-          <Route path="/salary/:id/edit" element={<SalaryCreateScreen />} />
+          <Route path="/salary/unlock" element={<SalaryUnlockScreen />} />
+          <Route
+            path="/cloud-forgot-password"
+            element={<CloudForgotPasswordScreen />}
+          />
+
+          <Route
+            path="/cloud-reset-password"
+            element={<CloudResetPasswordScreen />}
+          />
+
+          <Route element={<SalaryLockGuard />}>
+            <Route path="/salary" element={<SalaryScreen />} />
+            <Route path="/salary/create" element={<SalaryCreateScreen />} />
+            <Route path="/salary/:id/edit" element={<SalaryCreateScreen />} />
+            <Route path="/salary/search" element={<SalarySearchScreen />} />
+            <Route
+              path="/salary/statistics"
+              element={<SalaryStatisticScreen />}
+            />
+          </Route>
           <Route
             path="/transactions/:id/edit"
             element={<TransactionCreateScreen />}

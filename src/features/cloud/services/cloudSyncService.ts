@@ -1,6 +1,9 @@
 import { supabase } from "../../../shared/libs/supabaseClient";
 import { db } from "../../../database/db";
-import { getRequirePasswordKey } from "../../../shared/constants/storageKeys";
+import {
+  getRequirePasswordKey,
+  getSalaryLockKey,
+} from "../../../shared/constants/storageKeys";
 
 async function getRequiredCloudUserId() {
   const {
@@ -183,6 +186,40 @@ export async function pushSavingGoalsToCloud(localUserId: string) {
   }
 }
 
+export async function pushSalaryRecordsToCloud(localUserId: string) {
+  const cloudUserId = await getRequiredCloudUserId();
+
+  const records = await db.salaryRecords
+    .where("userId")
+    .equals(localUserId)
+    .toArray();
+
+  const rows = records.map((item: any) => ({
+    id: item.id,
+    user_id: cloudUserId,
+    type: item.type,
+    amount: item.amount,
+    month: item.month,
+    received_date: item.receivedDate,
+    company: item.company || null,
+    note: item.note || null,
+    description: item.description || null,
+    created_at: item.createdAt,
+    updated_at: item.updatedAt,
+    deleted_at: getDeletedAt(item),
+  }));
+
+  console.log("salary record rows sync:", rows);
+
+  if (rows.length === 0) return;
+
+  const { error } = await supabase.from("salary_records").upsert(rows);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function pushNotificationsToCloud(localUserId: string) {
   const cloudUserId = await getRequiredCloudUserId();
 
@@ -222,12 +259,23 @@ export async function pushAppSettingsToCloud(localUserId: string) {
   const requirePasswordValue =
     localStorage.getItem(getRequirePasswordKey(localUserId)) || "false";
 
+  const salaryLockValue =
+    localStorage.getItem(getSalaryLockKey(localUserId)) || "false";
+
   const rows = [
     {
       id: `app_setting_${cloudUserId}_require_password`,
       user_id: cloudUserId,
       key: "require_password",
       value: requirePasswordValue,
+      created_at: now,
+      updated_at: now,
+    },
+    {
+      id: `app_setting_${cloudUserId}_salary_lock`,
+      user_id: cloudUserId,
+      key: "salary_lock",
+      value: salaryLockValue,
       created_at: now,
       updated_at: now,
     },
@@ -248,11 +296,11 @@ export async function pushAllLocalDataToCloud(localUserId: string) {
   await pushTransactionsToCloud(localUserId);
   await pushSavingTransactionsToCloud(localUserId);
   await pushSavingGoalsToCloud(localUserId);
+  await pushSalaryRecordsToCloud(localUserId);
   await pushNotificationsToCloud(localUserId);
   await pushAppSettingsToCloud(localUserId);
 
   await cleanExtraCloudData(localUserId);
-  await pushSalaryRecordsToCloud(localUserId);
 }
 
 export async function compareLocalAndCloudData(localUserId: string) {
@@ -262,22 +310,32 @@ export async function compareLocalAndCloudData(localUserId: string) {
     .where("userId")
     .equals(localUserId)
     .toArray();
+
   const localCategories = await db.categories
     .where("userId")
     .equals(localUserId)
     .toArray();
+
   const localTransactions = await db.transactions
     .where("userId")
     .equals(localUserId)
     .toArray();
+
   const localSavingTransactions = await db.savingTransactions
     .where("userId")
     .equals(localUserId)
     .toArray();
+
   const localSavingGoals = await db.savingGoals
     .where("userId")
     .equals(localUserId)
     .toArray();
+
+  const localSalaryRecords = await db.salaryRecords
+    .where("userId")
+    .equals(localUserId)
+    .toArray();
+
   const localNotifications = await db.notifications
     .where("userId")
     .equals(localUserId)
@@ -313,6 +371,12 @@ export async function compareLocalAndCloudData(localUserId: string) {
     localIds: localSavingGoals.map((item) => item.id),
   });
 
+  const salaryRecords = await compareTable({
+    tableName: "salary_records",
+    cloudUserId,
+    localIds: localSalaryRecords.map((item) => item.id),
+  });
+
   const notifications = await compareTable({
     tableName: "notifications",
     cloudUserId,
@@ -322,18 +386,10 @@ export async function compareLocalAndCloudData(localUserId: string) {
   const appSettings = await compareTable({
     tableName: "app_settings",
     cloudUserId,
-    localIds: [`app_setting_${cloudUserId}_require_password`],
-  });
-
-  const localSalaryRecords = await db.salaryRecords
-    .where("userId")
-    .equals(localUserId)
-    .toArray();
-
-  const salaryRecords = await compareTable({
-    tableName: "salary_records",
-    cloudUserId,
-    localIds: localSalaryRecords.map((item) => item.id),
+    localIds: [
+      `app_setting_${cloudUserId}_require_password`,
+      `app_setting_${cloudUserId}_salary_lock`,
+    ],
   });
 
   return {
@@ -342,9 +398,9 @@ export async function compareLocalAndCloudData(localUserId: string) {
     transactions,
     savingTransactions,
     savingGoals,
+    salaryRecords,
     notifications,
     appSettings,
-    salaryRecords,
   };
 }
 
@@ -384,123 +440,8 @@ async function compareTable(params: {
 export async function syncAllLocalDataToCloudAndCleanExtra(
   localUserId: string,
 ) {
-  const cloudUserId = await getRequiredCloudUserId();
-
-  // 1. Đẩy toàn bộ local lên cloud
   await pushAllLocalDataToCloud(localUserId);
-
-  // 2. Lấy local ids
-  const localWallets = await db.wallets
-    .where("userId")
-    .equals(localUserId)
-    .toArray();
-
-  const localCategories = await db.categories
-    .where("userId")
-    .equals(localUserId)
-    .toArray();
-
-  const localTransactions = await db.transactions
-    .where("userId")
-    .equals(localUserId)
-    .toArray();
-
-  const localSavingTransactions = await db.savingTransactions
-    .where("userId")
-    .equals(localUserId)
-    .toArray();
-
-  const localSavingGoals = await db.savingGoals
-    .where("userId")
-    .equals(localUserId)
-    .toArray();
-
-  const localNotifications = await db.notifications
-    .where("userId")
-    .equals(localUserId)
-    .toArray();
-
-  const appSettingIds = [`app_setting_${cloudUserId}_require_password`];
-
-  // 3. Xóa những row cloud bị thừa so với local
-  await deleteExtraCloudRows({
-    tableName: "wallets",
-    cloudUserId,
-    localIds: localWallets.map((item) => item.id),
-  });
-
-  await deleteExtraCloudRows({
-    tableName: "categories",
-    cloudUserId,
-    localIds: localCategories.map((item) => item.id),
-  });
-
-  await deleteExtraCloudRows({
-    tableName: "transactions",
-    cloudUserId,
-    localIds: localTransactions.map((item) => item.id),
-  });
-
-  await deleteExtraCloudRows({
-    tableName: "saving_transactions",
-    cloudUserId,
-    localIds: localSavingTransactions.map((item) => item.id),
-  });
-
-  await deleteExtraCloudRows({
-    tableName: "saving_goals",
-    cloudUserId,
-    localIds: localSavingGoals.map((item) => item.id),
-  });
-
-  await deleteExtraCloudRows({
-    tableName: "notifications",
-    cloudUserId,
-    localIds: localNotifications.map((item) => item.id),
-  });
-
-  await deleteExtraCloudRows({
-    tableName: "app_settings",
-    cloudUserId,
-    localIds: appSettingIds,
-  });
-
   return compareLocalAndCloudData(localUserId);
-}
-
-async function deleteExtraCloudRows(params: {
-  tableName: string;
-  cloudUserId: string;
-  localIds: string[];
-}) {
-  const { tableName, cloudUserId, localIds } = params;
-
-  const { data, error } = await supabase
-    .from(tableName)
-    .select("id")
-    .eq("user_id", cloudUserId);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const cloudIds = (data || []).map((item: any) => item.id);
-
-  const extraIds = cloudIds.filter((id) => !localIds.includes(id));
-
-  if (extraIds.length === 0) return;
-
-  const { error: deleteError } = await supabase
-    .from(tableName)
-    .delete()
-    .eq("user_id", cloudUserId)
-    .in("id", extraIds);
-
-  if (deleteError) {
-    throw new Error(deleteError.message);
-  }
-
-  console.log(`Deleted extra rows from ${tableName}:`, extraIds);
 }
 
 export async function cleanExtraCloudData(localUserId: string) {
@@ -510,10 +451,12 @@ export async function cleanExtraCloudData(localUserId: string) {
     .where("userId")
     .equals(localUserId)
     .toArray();
+
   const localCategories = await db.categories
     .where("userId")
     .equals(localUserId)
     .toArray();
+
   const localTransactions = await db.transactions
     .where("userId")
     .equals(localUserId)
@@ -529,12 +472,12 @@ export async function cleanExtraCloudData(localUserId: string) {
     .equals(localUserId)
     .toArray();
 
-  const localNotifications = await db.notifications
+  const localSalaryRecords = await db.salaryRecords
     .where("userId")
     .equals(localUserId)
     .toArray();
 
-  const localSalaryRecords = await db.salaryRecords
+  const localNotifications = await db.notifications
     .where("userId")
     .equals(localUserId)
     .toArray();
@@ -558,6 +501,12 @@ export async function cleanExtraCloudData(localUserId: string) {
   });
 
   await deleteExtraRowsFromCloud({
+    tableName: "salary_records",
+    cloudUserId,
+    localIds: localSalaryRecords.map((item) => item.id),
+  });
+
+  await deleteExtraRowsFromCloud({
     tableName: "notifications",
     cloudUserId,
     localIds: localNotifications.map((item) => item.id),
@@ -566,11 +515,12 @@ export async function cleanExtraCloudData(localUserId: string) {
   await deleteExtraRowsFromCloud({
     tableName: "app_settings",
     cloudUserId,
-    localIds: [`app_setting_${cloudUserId}_require_password`],
+    localIds: [
+      `app_setting_${cloudUserId}_require_password`,
+      `app_setting_${cloudUserId}_salary_lock`,
+    ],
   });
 
-  // 2 bảng này thường không nên xóa bừa vì transaction đang tham chiếu tới.
-  // Nhưng nếu bạn muốn cloud khớp tuyệt đối với local thì vẫn có thể bật.
   await deleteExtraRowsFromCloud({
     tableName: "wallets",
     cloudUserId,
@@ -581,12 +531,6 @@ export async function cleanExtraCloudData(localUserId: string) {
     tableName: "categories",
     cloudUserId,
     localIds: localCategories.map((item) => item.id),
-  });
-
-  await deleteExtraRowsFromCloud({
-    tableName: "salary_records",
-    cloudUserId,
-    localIds: localSalaryRecords.map((item) => item.id),
   });
 }
 
@@ -609,9 +553,7 @@ async function deleteExtraRowsFromCloud(params: {
   const cloudIds = (data || []).map((item: any) => item.id);
   const extraIds = cloudIds.filter((id) => !localIds.includes(id));
 
-  if (extraIds.length === 0) {
-    return;
-  }
+  if (extraIds.length === 0) return;
 
   console.log(`Xóa dữ liệu dư trên cloud - ${tableName}:`, extraIds);
 
@@ -644,25 +586,28 @@ export async function pullAllCloudDataToLocal(localUserId: string) {
     supabase.from("transactions").select("*").eq("user_id", cloudUserId),
     supabase.from("saving_transactions").select("*").eq("user_id", cloudUserId),
     supabase.from("saving_goals").select("*").eq("user_id", cloudUserId),
+    supabase.from("salary_records").select("*").eq("user_id", cloudUserId),
     supabase.from("notifications").select("*").eq("user_id", cloudUserId),
     supabase.from("app_settings").select("*").eq("user_id", cloudUserId),
-    supabase.from("salary_records").select("*").eq("user_id", cloudUserId),
   ]);
 
   if (walletsResult.error) throw new Error(walletsResult.error.message);
   if (categoriesResult.error) throw new Error(categoriesResult.error.message);
-  if (transactionsResult.error)
+  if (transactionsResult.error) {
     throw new Error(transactionsResult.error.message);
+  }
   if (savingTransactionsResult.error) {
     throw new Error(savingTransactionsResult.error.message);
   }
   if (savingGoalsResult.error) throw new Error(savingGoalsResult.error.message);
-  if (notificationsResult.error)
-    throw new Error(notificationsResult.error.message);
-  if (appSettingsResult.error) throw new Error(appSettingsResult.error.message);
-
   if (salaryRecordsResult.error) {
     throw new Error(salaryRecordsResult.error.message);
+  }
+  if (notificationsResult.error) {
+    throw new Error(notificationsResult.error.message);
+  }
+  if (appSettingsResult.error) {
+    throw new Error(appSettingsResult.error.message);
   }
 
   const cloudWallets = walletsResult.data || [];
@@ -670,9 +615,9 @@ export async function pullAllCloudDataToLocal(localUserId: string) {
   const cloudTransactions = transactionsResult.data || [];
   const cloudSavingTransactions = savingTransactionsResult.data || [];
   const cloudSavingGoals = savingGoalsResult.data || [];
+  const cloudSalaryRecords = salaryRecordsResult.data || [];
   const cloudNotifications = notificationsResult.data || [];
   const cloudAppSettings = appSettingsResult.data || [];
-  const cloudSalaryRecords = salaryRecordsResult.data || [];
 
   await db.transaction(
     "rw",
@@ -680,11 +625,10 @@ export async function pullAllCloudDataToLocal(localUserId: string) {
     db.categories,
     db.transactions,
     db.savingTransactions,
-    db.salaryRecords,
     db.savingGoals,
+    db.salaryRecords,
     db.notifications,
     async () => {
-      // Xóa dữ liệu local cũ của user hiện tại để tránh bị nhân đôi/dữ liệu thừa
       await db.wallets.where("userId").equals(localUserId).delete();
       await db.categories.where("userId").equals(localUserId).delete();
       await db.transactions.where("userId").equals(localUserId).delete();
@@ -731,7 +675,7 @@ export async function pullAllCloudDataToLocal(localUserId: string) {
             id: item.id,
             userId: localUserId,
             walletId: item.wallet_id,
-            categoryId: item.category_id,
+            categoryId: item.category_id || undefined,
             type: item.type,
             debtType: item.debt_type || undefined,
             amount: Number(item.amount || 0),
@@ -764,7 +708,7 @@ export async function pullAllCloudDataToLocal(localUserId: string) {
       await db.savingGoals.bulkPut(
         cloudSavingGoals
           .filter((item: any) => !item.deleted_at)
-          .map((item: unknown) => ({
+          .map((item: any) => ({
             id: item.id,
             userId: localUserId,
             name: item.name,
@@ -774,21 +718,6 @@ export async function pullAllCloudDataToLocal(localUserId: string) {
             note: item.note || undefined,
             createdAt: item.created_at,
             updatedAt: item.updated_at,
-          })),
-      );
-
-      await db.notifications.bulkPut(
-        cloudNotifications
-          .filter((item: unknown) => !item.deleted_at)
-          .map((item: unknown) => ({
-            id: item.id,
-            userId: localUserId,
-            type: item.type,
-            title: item.title,
-            description: item.description,
-            actionUrl: item.action_url || undefined,
-            isRead: Boolean(item.is_read),
-            createdAt: item.created_at,
           })),
       );
 
@@ -809,6 +738,21 @@ export async function pullAllCloudDataToLocal(localUserId: string) {
             updatedAt: item.updated_at,
           })),
       );
+
+      await db.notifications.bulkPut(
+        cloudNotifications
+          .filter((item: any) => !item.deleted_at)
+          .map((item: any) => ({
+            id: item.id,
+            userId: localUserId,
+            type: item.type,
+            title: item.title,
+            description: item.description,
+            actionUrl: item.action_url || undefined,
+            isRead: Boolean(item.is_read),
+            createdAt: item.created_at,
+          })),
+      );
     },
   );
 
@@ -823,6 +767,14 @@ export async function pullAllCloudDataToLocal(localUserId: string) {
     );
   }
 
+  const salaryLockSetting = cloudAppSettings.find(
+    (item: any) => item.key === "salary_lock",
+  );
+
+  if (salaryLockSetting) {
+    localStorage.setItem(getSalaryLockKey(localUserId), salaryLockSetting.value);
+  }
+
   return {
     wallets: cloudWallets.filter((item: any) => !item.deleted_at).length,
     categories: cloudCategories.filter((item: any) => !item.deleted_at).length,
@@ -833,44 +785,40 @@ export async function pullAllCloudDataToLocal(localUserId: string) {
     ).length,
     savingGoals: cloudSavingGoals.filter((item: any) => !item.deleted_at)
       .length,
-    notifications: cloudNotifications.filter((item: any) => !item.deleted_at)
-      .length,
     salaryRecords: cloudSalaryRecords.filter((item: any) => !item.deleted_at)
+      .length,
+    notifications: cloudNotifications.filter((item: any) => !item.deleted_at)
       .length,
     appSettings: cloudAppSettings.length,
   };
 }
 
-export async function pushSalaryRecordsToCloud(localUserId: string) {
-  const cloudUserId = await getRequiredCloudUserId();
+function getAppBaseUrl() {
+  return `${window.location.origin}${import.meta.env.BASE_URL}`;
+}
 
-  const records = await db.salaryRecords
-    .where("userId")
-    .equals(localUserId)
-    .toArray();
+export async function sendCloudResetPasswordEmail(email: string) {
+  const redirectTo = `${getAppBaseUrl()}cloud-reset-password`;
 
-  const rows = records.map((item: any) => ({
-    id: item.id,
-    user_id: cloudUserId,
-    type: item.type,
-    amount: item.amount,
-    month: item.month,
-    received_date: item.receivedDate,
-    company: item.company || null,
-    note: item.note || null,
-    description: item.description || null,
-    created_at: item.createdAt,
-    updated_at: item.updatedAt,
-    deleted_at: getDeletedAt(item),
-  }));
-
-  console.log("salary record rows sync:", rows);
-
-  if (rows.length === 0) return;
-
-  const { error } = await supabase.from("salary_records").upsert(rows);
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  });
 
   if (error) {
     throw new Error(error.message);
   }
+
+  return data;
+}
+
+export async function updateCloudPassword(newPassword: string) {
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
 }
