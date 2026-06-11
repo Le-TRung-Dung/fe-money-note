@@ -470,7 +470,19 @@ const DashboardScreen: React.FC = () => {
               .slice(0, 3)
               .map((tx: any) => {
                 const txDate = dayjs(tx.date).format("DD/MM/YYYY");
+
                 const isIncome = tx.type === "income";
+                const isExpense = tx.type === "expense";
+                const isDebt = tx.type === "debt";
+
+                const isBorrowDebt = isDebt && tx.debtType === "borrow";
+                const isLendDebt = isDebt && tx.debtType === "lend";
+
+                const isMoneyIn = isIncome || isBorrowDebt;
+                const isMoneyOut = isExpense || isLendDebt;
+
+                const amountColor = isMoneyIn ? "#22C55E" : "#EF4444";
+                const amountPrefix = isMoneyIn ? "+" : "-";
 
                 return (
                   <div
@@ -504,9 +516,9 @@ const DashboardScreen: React.FC = () => {
                       </div>
                       <div
                         className="font-bold text-[14px]"
-                        style={{ color: isIncome ? "#22C55E" : "#EF4444" }}
+                        style={{ color: amountColor }}
                       >
-                        {isIncome ? "+" : "-"}
+                        {amountPrefix}
                         {formatMoney(tx.amount)}
                       </div>
                     </div>
